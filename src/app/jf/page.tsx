@@ -19,7 +19,9 @@ export default function JFTester() {
   const [situation, setSituation] = useState("Facing uncertainty about work this week");
   const [pronoun, setPronoun] = useState<"we" | "I">("we");
 
+  // Replaced `any` with the explicit `MapResp` type
   const [mapResult, setMapResult] = useState<MapResp | null>(null);
+  // Replaced `any` with the explicit `ComposeResp` type
   const [composeResult, setComposeResult] = useState<ComposeResp | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -33,8 +35,8 @@ export default function JFTester() {
         const res = await fetch(`${api}/healthz`);
         const data = await res.json();
         setHealth(data);
-      } catch (e: any) {
-        setError(e?.message || "Health check failed");
+      } catch (e: unknown) {
+        setError((e as Error)?.message || "Health check failed");
       } finally {
         setChecking(false);
       }
@@ -52,10 +54,11 @@ export default function JFTester() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ emotion, language: "en" }),
       });
-      const data = (await res.json()) as MapResp;
-      setMapResult(data);
-    } catch (e: any) {
-      setError(e?.message || "Map failed");
+      const data = await res.json();
+      // Corrected to use `MapResp`
+      setMapResult(data as MapResp);
+    } catch (e: unknown) {
+      setError((e as Error)?.message || "Map failed");
     } finally {
       setBusy(false);
     }
@@ -78,10 +81,11 @@ export default function JFTester() {
           show_anchor: true,
         }),
       });
-      const data = (await res.json()) as ComposeResp;
-      setComposeResult(data);
-    } catch (e: any) {
-      setError(e?.message || "Compose failed");
+      const data = await res.json();
+      // Corrected to use `ComposeResp`
+      setComposeResult(data as ComposeResp);
+    } catch (e: unknown) {
+      setError((e as Error)?.message || "Compose failed");
     } finally {
       setBusy(false);
     }
