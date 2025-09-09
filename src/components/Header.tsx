@@ -4,7 +4,6 @@ import Link from "next/link";
 import Image from "next/image";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
 const DONATE_URL = process.env.NEXT_PUBLIC_DONATE_URL || "#";
 const SUBSCRIBE_URL = process.env.NEXT_PUBLIC_SUBSCRIBE_URL || "#";
 
@@ -18,7 +17,6 @@ export default function Header() {
         </Link>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/about" className="hover:underline">About</Link>
-          <a href={SITE_URL} className="hover:underline" target="_blank" rel="noreferrer">Website</a>
           <a
             href={DONATE_URL}
             className="px-3 py-1 rounded-md border text-black hover:opacity-90"
@@ -26,15 +24,16 @@ export default function Header() {
             target="_blank"
             rel="noreferrer"
           >
-            Donate
+            ❤️ Donate
           </a>
           <a
             href={SUBSCRIBE_URL}
-            className="px-3 py-1 rounded-md border bg-white/80 hover:bg-white"
+            className="px-3 py-1 rounded-md border text-black hover:opacity-90"
+            style={{ backgroundColor: "var(--brand-gold)" }}
             target="_blank"
             rel="noreferrer"
           >
-            Subscribe
+            ❤️ Subscribe
           </a>
         </nav>
       </div>
