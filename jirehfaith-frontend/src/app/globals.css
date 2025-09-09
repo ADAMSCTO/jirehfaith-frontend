@@ -1,11 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #87CEEB;  /* JirehFaith brand background (Sky Blue) */
+  --background: #ffffff;
   --foreground: #171717;
-  --brand-gold: #FFD700;
-  --brand-blue: #87CEEB;
-  --header: #bfe9ff;
 }
 
 @theme inline {

@@ -1,103 +1,218 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
+const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
+const ATTRIBUTION = `— Source: ${SITE_NAME} (${SITE_URL})`;
+
+// Normalize various possible response shapes into an array of {title, content}
+function prettyTitle(title: string) {
+  const key = String(title || "").replace(/_/g, " ").trim();
+  if (key.toLowerCase() === "yielding listening" || key.toLowerCase() === "yielding_listening") {
+    return "Yielding / Listening";
+  }
+  return key.replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function toTitleCase(name: string) {
+  return String(name || "")
+    .trim()
+    .replace(/\b\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
+}
+function normalizeSituation(s: string) {
+  const cleaned = String(s || "").trim().replace(/\s+/g, " ");
+  if (!cleaned) return "";
+  return cleaned[0].toUpperCase() + cleaned.slice(1);
+}
+
+function normalizeSections(data: any) {
+  const raw = data?.sections ?? data?.output ?? data;
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object") {
+    return Object.entries(raw).map(([title, content]) => ({
+      title,
+      content: String(content ?? ""),
+    }));
+  }
+  if (typeof raw === "string") {
+    return [{ title: "Prayer", content: raw }];
+  }
+  return [];
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [emotion, setEmotion] = useState("anxiety");
+  const [pronoun, setPronoun] = useState<TComposeRequest["pronoun_style"]>("we");
+  const [personName, setPersonName] = useState("");
+  const [situation, setSituation] = useState("");
+  const [showAnchor, setShowAnchor] = useState(true);
+  const [copied, setCopied] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
+  const compose = useMutation({
+    mutationFn: async (input: TComposeRequest) => {
+      const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
+      return data;
+    },
+  });
+  const sections = normalizeSections(compose.data);
+const prayerBase = (compose.data && (compose.data as any).prayer)
+  ? String((compose.data as any).prayer)
+  : sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n");
+const fullPrayer = `${prayerBase}\n\n${ATTRIBUTION}`;
+  const anchor = compose.data?.anchor;
+  return (
+    <main className="p-6 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-semibold mb-2">JirehFaith — Prayer Composer</h1>
+      <p className="text-sm text-gray-600 mb-6">
+        Backend: {process.env.NEXT_PUBLIC_API_BASE || "not set"}
+      </p>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* LEFT: form */}
+        <section className="border rounded-lg p-4 space-y-3 bg-white shadow-sm">
+          <div>
+            <label className="block text-sm font-medium mb-1">Emotion</label>
+            <select
+              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={emotion}
+              onChange={(e) => setEmotion(e.target.value)}
+            >
+              <option value="anxiety">anxiety</option>
+              <option value="grief">grief</option>
+              <option value="fear">fear</option>
+              <option value="anger">anger</option>
+              <option value="love">love</option>
+              <option value="perseverance">perseverance</option>
+              <option value="hope">hope</option>
+              <option value="joy">joy</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Pronoun style</label>
+            <select
+              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={pronoun}
+              onChange={(e) =>
+                setPronoun(e.target.value as TComposeRequest["pronoun_style"])
+              }
+            >
+              <option value="i">I / me / my</option>
+              <option value="we">We / us / our</option>
+              <option value="he">He / him / his</option>
+              <option value="she">She / her / her</option>
+              <option value="they">They / them / their</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Person name (optional)</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={personName}
+              onChange={(e) => setPersonName(e.target.value)}
+              placeholder="e.g., John"
             />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Situation (optional)</label>
+            <input
+              className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-300"
+              value={situation}
+              onChange={(e) => setSituation(e.target.value)}
+              placeholder="e.g., upcoming surgery"
+            />
+          </div>
+
+          <div className="flex items-center gap-2 mt-1">
+  <input
+    id="show-anchor"
+    type="checkbox"
+    checked={showAnchor}
+    onChange={(e) => setShowAnchor(e.target.checked)}
+  />
+  <label htmlFor="show-anchor" className="text-sm">Show anchor</label>
+</div>
+
+          <button
+            className="mt-3 inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto self-start"
+            disabled={compose.isPending}
+            onClick={() =>
+              compose.mutate({
+                emotion,
+                language: "en",
+                pronoun_style: pronoun,
+                person_name: personName ? toTitleCase(personName) : undefined,
+                situation: normalizeSituation(situation) || undefined,
+                show_anchor: showAnchor,
+              })
+            }
           >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+            {compose.isPending ? "Composing…" : "Compose prayer"}
+          </button>
+
+          {compose.isError && (
+            <p className="text-red-600 text-sm mt-2">
+              Error: {(compose.error as any)?.message || "Unknown error"}
+            </p>
+          )}
+        </section>
+
+        {/* RIGHT: output */}
+                <section className="border rounded-lg p-4 bg-white shadow-sm">
+          <div className="mb-3 flex items-center justify-between">
+  <h2 className="text-xl font-medium">Prayer</h2>
+  <button
+    className="text-sm rounded-md border px-3 py-1 disabled:opacity-50"
+    disabled={!compose.data || sections.length === 0}
+    onClick={async () => {
+      try {
+        await navigator.clipboard.writeText(fullPrayer);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      } catch {}
+    }}
+    title="Copy full prayer to clipboard"
+  >
+    {copied ? "Copied!" : "Copy"}
+  </button>
+</div>
+
+          {(!compose.data || sections.length === 0) && (
+            <p className="text-gray-500 text-sm">No prayer yet.</p>
+          )}
+          {sections.length > 0 && (
+            <div className="space-y-4">
+              {sections.map((s: any, idx: number) => (
+                <div key={idx}>
+                  <div className="font-semibold">{prettyTitle(String(s.title))}</div>
+                  <div className="whitespace-pre-wrap">{s.content}</div>
+                </div>
+              ))}
+              {anchor && (
+                <div className="border-t pt-3 text-sm">
+                  <div className="font-semibold">Anchor</div>
+                  <div className="whitespace-pre-wrap">
+                    {anchor.ref}
+                    {anchor.text ? ` — ${anchor.text}` : ""}
+                  </div>
+                </div>
+              )}
+              <div className="mt-3 text-xs text-gray-500 italic">{ATTRIBUTION}</div>
+              <details className="mt-2 text-xs text-gray-500">
+                <summary>Debug (raw response)</summary>
+                <pre className="mt-2 whitespace-pre-wrap break-words">
+{JSON.stringify(compose.data, null, 2)}
+                </pre>
+              </details>
+            </div>
+          )}
+        </section>
+      </div>
+    </main>
   );
 }

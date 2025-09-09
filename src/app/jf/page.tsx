@@ -19,9 +19,7 @@ export default function JFTester() {
   const [situation, setSituation] = useState("Facing uncertainty about work this week");
   const [pronoun, setPronoun] = useState<"we" | "I">("we");
 
-  // Replaced `any` with the explicit `MapResp` type
   const [mapResult, setMapResult] = useState<MapResp | null>(null);
-  // Replaced `any` with the explicit `ComposeResp` type
   const [composeResult, setComposeResult] = useState<ComposeResp | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -36,7 +34,12 @@ export default function JFTester() {
         const data = await res.json();
         setHealth(data);
       } catch (e: unknown) {
-        setError((e as Error)?.message || "Health check failed");
+        // Correct error handling with type narrowing
+        if (e instanceof Error) {
+          setError(e.message);
+        } else {
+          setError("Health check failed");
+        }
       } finally {
         setChecking(false);
       }
@@ -55,10 +58,19 @@ export default function JFTester() {
         body: JSON.stringify({ emotion, language: "en" }),
       });
       const data = await res.json();
-      // Corrected to use `MapResp`
-      setMapResult(data as MapResp);
+      // Ensure type safety by checking data type
+      if (data && typeof data === "object") {
+        setMapResult(data as MapResp);
+      } else {
+        setError("Invalid response format for map");
+      }
     } catch (e: unknown) {
-      setError((e as Error)?.message || "Map failed");
+      // Correct error handling with type narrowing
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Map failed");
+      }
     } finally {
       setBusy(false);
     }
@@ -82,10 +94,19 @@ export default function JFTester() {
         }),
       });
       const data = await res.json();
-      // Corrected to use `ComposeResp`
-      setComposeResult(data as ComposeResp);
+      // Ensure type safety by checking data type
+      if (data && typeof data === "object") {
+        setComposeResult(data as ComposeResp);
+      } else {
+        setError("Invalid response format for compose");
+      }
     } catch (e: unknown) {
-      setError((e as Error)?.message || "Compose failed");
+      // Correct error handling with type narrowing
+      if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError("Compose failed");
+      }
     } finally {
       setBusy(false);
     }
