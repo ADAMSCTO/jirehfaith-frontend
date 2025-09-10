@@ -69,12 +69,12 @@ export default function Home() {
   const anchor = (compose.data as any)?.anchor;
 
   return (
-    <main className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-semibold mb-6 text-center" style={{ color: "var(--brand-gold)" }}>Prayer Composer</h1>
+    <main className="p-3 md:p-4 max-w-4xl mx-auto">
+      <h1 className="text-3xl font-semibold mb-3 text-center" style={{ color: "var(--brand-gold)" }}>Prayer Composer</h1>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-3 md:grid-cols-2">
         {/* LEFT: form */}
-        <section className="border rounded-lg p-4 space-y-3 bg-white shadow-sm">
+        <section className="border rounded-lg p-3 space-y-3 bg-white shadow-sm">
           {/* Emotion */}
           <div>
             <label className="block text-sm font-medium mb-1">Emotion</label>
@@ -171,7 +171,7 @@ export default function Home() {
         </section>
 
         {/* RIGHT: output */}
-        <section className="border rounded-lg p-4 bg-white shadow-sm">
+        <section className="border rounded-lg p-3 bg-white shadow-sm">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-xl font-medium">Prayer</h2>
             <button
