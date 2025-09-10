@@ -70,10 +70,7 @@ export default function Home() {
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-semibold mb-2">JirehFaith — Prayer Composer</h1>
-      <p className="text-sm text-gray-600 mb-6">
-        Backend: {process.env.NEXT_PUBLIC_API_BASE || "not set"}
-      </p>
+      <h1 className="text-3xl font-semibold mb-6 text-center" style={{ color: "var(--brand-gold)" }}>Prayer Composer</h1>
 
       <div className="grid gap-4 md:grid-cols-2">
         {/* LEFT: form */}
