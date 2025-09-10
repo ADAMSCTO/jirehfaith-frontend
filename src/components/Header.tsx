@@ -15,6 +15,13 @@ export default function Header() {
           <Image src="/logo-transparent.png?v=gold1" alt={SITE_NAME} width={160} height={42} priority />
           <span className="sr-only">{SITE_NAME}</span>
         </Link>
+        <div className="flex flex-col items-center text-center flex-grow">
+          <div className="text-2xl" style={{ color: "var(--brand-gold)" }}>🔥</div>
+          <div className="text-xl font-bold" style={{ color: "var(--brand-gold)" }}>JIREH FAITH</div>
+          <div className="text-sm italic" style={{ color: "var(--brand-gold)" }}>
+            When life speaks, let God’s Word answer.
+          </div>
+        </div>
         <nav className="flex items-center gap-3 text-sm">
           <Link href="/about" className="hover:underline">About</Link>
           <a
