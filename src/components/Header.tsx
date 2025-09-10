@@ -10,12 +10,12 @@ const SUBSCRIBE_URL = process.env.NEXT_PUBLIC_SUBSCRIBE_URL || "#";
 export default function Header() {
   return (
     <header className="w-full sticky top-0 z-10 bg-[var(--header)] backdrop-blur border-b border-black/10">
-      <div className="mx-auto max-w-5xl px-4 py-3 flex items-center justify-between">
+      <div className="mx-auto max-w-5xl px-4 py-1 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
           <Image src="/logo-transparent.png?v=gold1" alt={SITE_NAME} width={160} height={42} priority />
           <span className="sr-only">{SITE_NAME}</span>
         </Link>
-        <div className="flex flex-col items-center text-center flex-grow">
+        <div className="flex flex-col items-center text-center flex-grow leading-tight">
           <div className="text-3xl" style={{ color: "var(--brand-gold)" }}>🔥</div>
           <div className="text-2xl font-bold" style={{ color: "var(--brand-gold)" }}>JIREH FAITH</div>
           <div className="text-base italic" style={{ color: "var(--brand-gold)" }}>
