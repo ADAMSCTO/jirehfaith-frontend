@@ -7,7 +7,11 @@ const API_BASE =
   "http://127.0.0.1:8000";
 
 type MapResp = { themes?: string[]; candidates?: string[] };
-type ComposeResp = { sections?: Record<string, string>; anchor?: string };
+type ComposeResp = {
+  sections?: Record<string, string>;
+  anchor?: string;
+  references?: string[]; // optional scripture refs, e.g., ["Psalm 23:1", "Matt 6:34"]
+};
 
 export default function JFTester() {
   const [health, setHealth] = useState<null | { ok: boolean; version?: string }>(null);
@@ -82,17 +86,20 @@ export default function JFTester() {
       setError(null);
       setComposeResult(null);
       const res = await fetch(`${api}/dhll/compose`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          emotion,
-          language: "en",
-          pronoun_style: pronoun,
-          person_name: personName || undefined,
-          situation: situation || undefined,
-          show_anchor: true,
-        }),
-      });
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    emotion,
+    language: "en",
+    pronoun_style: pronoun,
+    person_name: personName || undefined,
+    situation: situation || undefined,
+    show_anchor: true,
+    richness: "rich",            // request broader vocabulary
+    include_references: true,    // request scripture references
+  }),
+});
+
       const data = await res.json();
       // Ensure type safety by checking data type
       if (data && typeof data === "object") {
@@ -231,6 +238,17 @@ export default function JFTester() {
                 <span className="font-semibold">Anchor:</span> {composeResult.anchor}
               </p>
             )}
+            {"references" in (composeResult || {}) && composeResult?.references?.length ? (
+              <div className="mt-3">
+                <div className="text-sm font-semibold">Scripture References</div>
+                <ul className="list-disc list-inside text-sm">
+                  {composeResult.references.map((r, i) => (
+                    <li key={i}>{r}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
           </section>
         )}
       </div>
