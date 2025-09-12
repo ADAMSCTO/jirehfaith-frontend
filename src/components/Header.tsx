@@ -10,37 +10,40 @@ const SUBSCRIBE_URL = process.env.NEXT_PUBLIC_SUBSCRIBE_URL || "#";
 export default function Header() {
   return (
     <header className="w-full sticky top-0 z-10 bg-[var(--header)] backdrop-blur border-b border-black/10">
-      <div className="mx-auto max-w-5xl px-4 py-1 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo-transparent.png?v=gold1" alt={SITE_NAME} width={160} height={42} priority />
-          <span className="sr-only">{SITE_NAME}</span>
-        </Link>
-        <div className="flex flex-col items-center text-center flex-grow leading-tight">
+      <div className="mx-auto max-w-5xl px-4 py-1 flex items-center justify-between flex-wrap gap-2">
+                <Link href="/" aria-label="Go to Home" title="Home" className="flex flex-col items-center text-center flex-grow leading-tight w-full order-2 md:order-none focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] cursor-pointer">
           <div className="text-3xl" style={{ color: "var(--brand-gold)" }}>🔥</div>
           <div className="text-2xl font-bold" style={{ color: "var(--brand-gold)" }}>JIREH FAITH</div>
           <div className="text-base italic" style={{ color: "var(--brand-gold)" }}>
-          When life speaks, let God’s Word answer.
-        </div>
-        </div>
-        <nav className="flex items-center gap-3 text-sm">
-          <Link href="/about" className="hover:underline">About</Link>
+           When life speaks, let God’s Word answer.
+          </div>
+        </Link>
+
+        <nav className="flex items-center gap-3 text-sm flex-wrap order-3 md:order-none justify-center w-full md:w-auto">
+          <Link
+  href="/about"
+  className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-1"
+  style={{ backgroundColor: "var(--brand-gold)" }}
+>
+  ✝️ About
+</Link>
           <a
-            href={DONATE_URL}
-            className="px-3 py-1 rounded-md border text-black hover:opacity-90"
-            style={{ backgroundColor: "var(--brand-gold)" }}
-            target="_blank"
-            rel="noreferrer"
-          >
-            ❤️ Donate
+           href={DONATE_URL}
+           className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-1"
+           style={{ backgroundColor: "var(--brand-gold)" }}
+           target="_blank"
+           rel="noreferrer"
+         >
+           ❤️ Donate
           </a>
           <a
-            href={SUBSCRIBE_URL}
-            className="px-3 py-1 rounded-md border text-black hover:opacity-90"
-            style={{ backgroundColor: "var(--brand-gold)" }}
-            target="_blank"
-            rel="noreferrer"
-          >
-            ❤️ Subscribe
+           href={SUBSCRIBE_URL}
+           className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-1"
+           style={{ backgroundColor: "var(--brand-gold)" }}
+           target="_blank"
+           rel="noreferrer"
+         >
+           ❤️ Subscribe
           </a>
         </nav>
       </div>

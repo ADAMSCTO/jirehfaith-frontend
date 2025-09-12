@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import type { ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
@@ -44,6 +45,22 @@ function normalizeSections(data: any) {
   }
   return [];
 }
+function Toast({ show, children }: { show: boolean; children: ReactNode }) {
+  return (
+    <div
+      aria-live="polite"
+      role="status"
+      aria-atomic="true"
+      className={`pointer-events-none fixed bottom-4 right-4 transition-opacity duration-200 ${
+        show ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div className="pointer-events-auto rounded-md bg-black/85 text-white text-sm px-3 py-2 shadow-lg">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
@@ -69,25 +86,78 @@ export default function Home() {
   const anchor = (compose.data as any)?.anchor;
 
   return (
-    <main className="p-3 md:p-4 max-w-6xl mx-auto h-[calc(100vh-64px)] md:h-[calc(100vh-72px)] overflow-hidden">
-      <h1
-        className="text-2xl md:text-3xl font-semibold mb-1 md:mb-1 text-center leading-tight"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        Prayer Composer
-      </h1>
+        <main
+      className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] md:h-[calc(100dvh-72px)] overflow-x-hidden md:overflow-hidden"
+      onKeyDown={(e) => {
+        if (e.key === "Escape") {
+          const details = document.querySelector("details");
+          if (details && details.open) {
+            details.removeAttribute("open");
+          }
+        }
+      }}
+      tabIndex={0}
+    >
+      <header className="mb-4">
+        <h1
+          className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
+          style={{ color: "var(--brand-gold)" }}
+        >
 
-      <div className="grid h-full gap-3 grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
+          {/* Left icon (praying hands, gold-outline) */}
+                              <img
+            src="/icons/praying-hands-gold.png"
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-8"
+          />
+
+          {/* Title text */}
+          Prayer Composer with The Holy Bible Scriptures
+
+          {/* Right icon (open Bible, gold-outline) */}
+                              <img
+            src="/open-bible-gold.png"
+            alt=""
+            aria-hidden="true"
+            className="h-8 w-8"
+          />
+
+        </h1>
+      </header>
+
+      <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
         {/* LEFT: form */}
-        <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm h-[calc(100vh-240px)] flex flex-col overflow-auto">
-          <div className="flex-1 min-h-0 space-y-3">
+        <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
+                    <div
+            className="flex-1 min-h-0 space-y-3"
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !compose.isPending) {
+                e.preventDefault();
+                compose.mutate({
+                  emotion,
+                  language: "en",
+                  pronoun_style: pronoun,
+                  person_name: personName ? toTitleCase(personName) : undefined,
+                  situation: normalizeSituation(situation) || undefined,
+                  show_anchor: showAnchor,
+                });
+              }
+            }}
+          >
             {/* Emotion */}
             <div>
-              <label className="block text-sm font-medium mb-1">Emotion</label>
-              <select
+              <label htmlFor="emotion" className="block text-sm font-medium mb-1">
+                Emotion
+              </label>
+                            <select
+                id="emotion"
+                aria-label="Emotion"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={emotion}
                 onChange={(e) => setEmotion(e.target.value)}
+                disabled={compose.isPending}
+                aria-disabled={compose.isPending ? true : undefined}
               >
                 <option value="anxiety">anxiety</option>
                 <option value="grief">grief</option>
@@ -102,11 +172,19 @@ export default function Home() {
 
             {/* Pronoun style */}
             <div>
-              <label className="block text-sm font-medium mb-1">Pronoun style</label>
-              <select
+              <label htmlFor="pronoun-style" className="block text-sm font-medium mb-1">
+                Pronoun style
+              </label>
+                            <select
+                id="pronoun-style"
+                aria-label="Pronoun style"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={pronoun}
-                onChange={(e) => setPronoun(e.target.value as TComposeRequest["pronoun_style"])}
+                onChange={(e) =>
+                  setPronoun(e.target.value as TComposeRequest["pronoun_style"])
+                }
+                disabled={compose.isPending}
+                aria-disabled={compose.isPending ? true : undefined}
               >
                 <option value="i">I / me / my</option>
                 <option value="we">We / us / our</option>
@@ -118,43 +196,64 @@ export default function Home() {
 
             {/* Person name */}
             <div>
-              <label className="block text-sm font-medium mb-1">Person name (optional)</label>
-              <input
+              <label htmlFor="person-name" className="block text-sm font-medium mb-1">
+                Person name (optional)
+              </label>
+                            <input
+                id="person-name"
+                type="text"
+                aria-label="Person name"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={personName}
                 onChange={(e) => setPersonName(e.target.value)}
                 placeholder="e.g., John"
+                disabled={compose.isPending}
+                aria-disabled={compose.isPending ? true : undefined}
               />
             </div>
 
             {/* Situation */}
             <div>
-              <label className="block text-sm font-medium mb-1">Situation (optional)</label>
-              <input
+              <label htmlFor="situation" className="block text-sm font-medium mb-1">
+                Situation (optional)
+              </label>
+                            <input
+                id="situation"
+                type="text"
+                aria-label="Situation"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={situation}
                 onChange={(e) => setSituation(e.target.value)}
                 placeholder="e.g., upcoming surgery"
+                disabled={compose.isPending}
+                aria-disabled={compose.isPending ? true : undefined}
               />
             </div>
 
             {/* Toggle + Compose row */}
             <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <input
+                                <input
                   id="show-anchor"
                   type="checkbox"
                   checked={showAnchor}
                   onChange={(e) => setShowAnchor(e.target.checked)}
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
                 />
                 <label htmlFor="show-anchor" className="text-sm">
                   Show anchor
                 </label>
               </div>
 
-              <button
-                className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 sm:w-auto shrink-0"
+                            <button
+                aria-label="Compose prayer"
+                title="Compose prayer"
+                className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 disabled={compose.isPending}
+                aria-disabled={compose.isPending ? true : undefined}
+                aria-controls="prayer-output"
+                aria-busy={compose.isPending ? true : undefined}
                 onClick={() =>
                   compose.mutate({
                     emotion,
@@ -166,7 +265,22 @@ export default function Home() {
                   })
                 }
               >
-                {compose.isPending ? "Composing…" : "Compose prayer"}
+                {compose.isPending ? (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" />
+                    </svg>
+                    Composing…
+                  </>
+                ) : (
+                  "Compose prayer"
+                )}
               </button>
             </div>
           </div>
@@ -179,14 +293,14 @@ export default function Home() {
         </section>
 
         {/* RIGHT: output */}
-        <section className="border rounded-lg p-3 bg-white shadow-sm h-[calc(100vh-240px)] flex flex-col overflow-auto">
+        <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
           {/* Non-sticky header */}
           <div className="mb-3 flex items-center justify-between border-b pb-2">
             <h2 className="text-xl font-medium">Prayer</h2>
           </div>
 
           {/* Content area */}
-          <div className="flex-1 min-h-0 space-y-4">
+          <div id="prayer-output" className="flex-1 min-h-0 space-y-4" aria-live="polite" aria-busy={compose.isPending ? true : undefined}>
             {(!compose.data || sections.length === 0) && (
               <p className="text-gray-500 text-sm">No prayer yet.</p>
             )}
@@ -224,23 +338,32 @@ export default function Home() {
 
           {/* Footer with Copy button (always rendered, disabled until content exists) */}
           <div className="mt-4 pt-2 border-t">
-            <button
-              className="text-sm rounded-md border px-3 py-1 disabled:opacity-50"
+                        <button
+              aria-label="Copy full prayer"
+              title="Copy full prayer"
+              className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
               disabled={!compose.data || sections.length === 0}
+              aria-controls="prayer-output"
+              aria-describedby="copy-status"
               onClick={async () => {
                 try {
                   await navigator.clipboard.writeText(fullPrayer);
                   setCopied(true);
-                  setTimeout(() => setCopied(false), 1500);
+                  setTimeout(() => setCopied(false), 2000);
                 } catch {}
               }}
-              title="Copy full prayer to clipboard"
             >
               {copied ? "Copied!" : "Copy"}
             </button>
+
+            {/* Screen-reader live region for copy feedback; Toast will replace this visually in Phase 3 */}
+            <div id="copy-status" role="status" aria-live="polite" className="sr-only">
+              {copied ? "Copied to clipboard" : ""}
+            </div>
           </div>
         </section>
       </div>
+          <Toast show={copied}>Copied to clipboard</Toast>
     </main>
   );
 }
