@@ -175,7 +175,6 @@ export default function Home() {
   verse_rotation: {
     avoid: getRecentAvoid(mapToneVariant(emotion)),
   },
-})
                 });
               }
             }}
