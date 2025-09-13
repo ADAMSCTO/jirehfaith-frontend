@@ -70,6 +70,7 @@ export default function Home() {
   const [situation, setSituation] = useState("");
   const [showAnchor, setShowAnchor] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
   const [topic, setTopic] = useState<string>("comfort");
   const [verse, setVerse] = useState<Verse | null>(null);
 
@@ -140,7 +141,7 @@ onKeyDown={(e) => {
     e.preventDefault();
     compose.mutate({
       emotion,
-      language: "en",
+      language: lang,
       pronoun_style: pronoun,
       person_name: personName ? toTitleCase(personName) : undefined,
       situation: normalizeSituation(situation) || undefined,
@@ -215,6 +216,26 @@ onKeyDown={(e) => {
                 <option value="joy">joy</option>
               </select>
             </div>
+{/* Language */}
+<div>
+  <label htmlFor="language" className="block text-sm font-medium mb-1">
+    Language
+  </label>
+  <select
+    id="language"
+    aria-label="Language"
+    className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+    value={lang}
+    onChange={(e) => setLang(e.target.value as "en" | "es" | "fr" | "pt")}
+    disabled={compose.isPending}
+    aria-disabled={compose.isPending ? true : undefined}
+  >
+    <option value="en">English</option>
+    <option value="es">Español (preview)</option>
+    <option value="fr">Français (aperçu)</option>
+    <option value="pt">Português (prévia)</option>
+  </select>
+</div>
 
             {/* Pronoun style */}
             <div>
@@ -303,7 +324,7 @@ onKeyDown={(e) => {
                 onClick={() =>
                   compose.mutate({
                     emotion,
-                    language: "en",
+                    language: lang,
                     pronoun_style: pronoun,
                     person_name: personName ? toTitleCase(personName) : undefined,
                     situation: normalizeSituation(situation) || undefined,
