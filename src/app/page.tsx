@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -114,7 +115,7 @@ export default function Home() {
   const anchor = (compose.data as any)?.anchor;
 
   return (
-        <main
+    <main
       className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] md:h-[calc(100dvh-72px)] overflow-x-hidden md:overflow-hidden"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
@@ -131,9 +132,8 @@ export default function Home() {
           className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
           style={{ color: "var(--brand-gold)" }}
         >
-
           {/* Left icon (praying hands, gold-outline) */}
-                              <img
+          <img
             src="/icons/praying-hands-gold.png"
             alt=""
             aria-hidden="true"
@@ -144,37 +144,36 @@ export default function Home() {
           Prayer Composer with The Holy Bible Scriptures
 
           {/* Right icon (open Bible, gold-outline) */}
-                              <img
+          <img
             src="/open-bible-gold.png"
             alt=""
             aria-hidden="true"
             className="h-8 w-8"
           />
-
         </h1>
       </header>
 
       <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
         {/* LEFT: form */}
         <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
-                    <div
+          <div
             className="flex-1 min-h-0 space-y-3"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !compose.isPending) {
                 e.preventDefault();
                 compose.mutate({
-  emotion,
-  language: "en",
-  pronoun_style: pronoun,
-  person_name: personName ? toTitleCase(personName) : undefined,
-  situation: normalizeSituation(situation) || undefined,
-  show_anchor: showAnchor,
+                  emotion,
+                  language: "en",
+                  pronoun_style: pronoun,
+                  person_name: personName ? toTitleCase(personName) : undefined,
+                  situation: normalizeSituation(situation) || undefined,
+                  show_anchor: showAnchor,
 
-  // RC7 additions:
-  tone_variant: mapToneVariant(emotion),
-  verse_rotation: {
-    avoid: getRecentAvoid(mapToneVariant(emotion)),
-  },
+                  // RC7 additions:
+                  tone_variant: mapToneVariant(emotion),
+                  verse_rotation: {
+                    avoid: getRecentAvoid(mapToneVariant(emotion)),
+                  },
                 });
               }
             }}
@@ -184,7 +183,7 @@ export default function Home() {
               <label htmlFor="emotion" className="block text-sm font-medium mb-1">
                 Emotion
               </label>
-                            <select
+              <select
                 id="emotion"
                 aria-label="Emotion"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
@@ -209,14 +208,12 @@ export default function Home() {
               <label htmlFor="pronoun-style" className="block text-sm font-medium mb-1">
                 Pronoun style
               </label>
-                            <select
+              <select
                 id="pronoun-style"
                 aria-label="Pronoun style"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={pronoun}
-                onChange={(e) =>
-                  setPronoun(e.target.value as TComposeRequest["pronoun_style"])
-                }
+                onChange={(e) => setPronoun(e.target.value as TComposeRequest["pronoun_style"])}
                 disabled={compose.isPending}
                 aria-disabled={compose.isPending ? true : undefined}
               >
@@ -233,7 +230,7 @@ export default function Home() {
               <label htmlFor="person-name" className="block text-sm font-medium mb-1">
                 Person name (optional)
               </label>
-                            <input
+              <input
                 id="person-name"
                 type="text"
                 aria-label="Person name"
@@ -251,7 +248,7 @@ export default function Home() {
               <label htmlFor="situation" className="block text-sm font-medium mb-1">
                 Situation (optional)
               </label>
-                            <input
+              <input
                 id="situation"
                 type="text"
                 aria-label="Situation"
@@ -266,4 +263,144 @@ export default function Home() {
 
             {/* Toggle + Compose row */}
             <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2">
+                <input
+                  id="show-anchor"
+                  type="checkbox"
+                  checked={showAnchor}
+                  onChange={(e) => setShowAnchor(e.target.checked)}
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                />
+                <label htmlFor="show-anchor" className="text-sm">
+                  Show anchor
+                </label>
+              </div>
 
+              <button
+                aria-label="Compose prayer"
+                title="Compose prayer"
+                className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                disabled={compose.isPending}
+                aria-disabled={compose.isPending ? true : undefined}
+                aria-controls="prayer-output"
+                aria-busy={compose.isPending ? true : undefined}
+                onClick={() =>
+                  compose.mutate({
+                    emotion,
+                    language: "en",
+                    pronoun_style: pronoun,
+                    person_name: personName ? toTitleCase(personName) : undefined,
+                    situation: normalizeSituation(situation) || undefined,
+                    show_anchor: showAnchor,
+
+                    // RC7 additions:
+                    tone_variant: mapToneVariant(emotion),
+                    verse_rotation: {
+                      avoid: getRecentAvoid(mapToneVariant(emotion)),
+                    },
+                  })
+                }
+              >
+                {compose.isPending ? (
+                  <>
+                    <svg
+                      className="mr-2 h-4 w-4 animate-spin"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10" stroke="currentColor" strokeOpacity="0.25" strokeWidth="4" />
+                      <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" />
+                    </svg>
+                    Composing…
+                  </>
+                ) : (
+                  "Compose prayer"
+                )}
+              </button>
+            </div>
+          </div>
+
+          {compose.isError && (
+            <p className="text-red-600 text-sm mt-2">
+              Error: {(compose.error as any)?.message || "Unknown error"}
+            </p>
+          )}
+        </section>
+
+        {/* RIGHT: output */}
+        <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
+          {/* Non-sticky header */}
+          <div className="mb-3 flex items-center justify-between border-b pb-2">
+            <h2 className="text-xl font-medium">Prayer</h2>
+          </div>
+
+          {/* Content area */}
+          <div id="prayer-output" className="flex-1 min-h-0 space-y-4" aria-live="polite" aria-busy={compose.isPending ? true : undefined}>
+            {(!compose.data || sections.length === 0) && (
+              <p className="text-gray-500 text-sm">No prayer yet.</p>
+            )}
+
+            {sections.length > 0 && (
+              <>
+                {sections.map((s: any, idx: number) => (
+                  <div key={idx}>
+                    <div className="font-semibold">{prettyTitle(String(s.title))}</div>
+                    <div className="whitespace-pre-wrap">{s.content}</div>
+                  </div>
+                ))}
+
+                {anchor && (
+                  <div className="border-t pt-3 text-sm">
+                    <div className="font-semibold">Anchor</div>
+                    <div className="whitespace-pre-wrap">
+                      {anchor.ref}
+                      {anchor.text ? ` — ${anchor.text}` : ""}
+                    </div>
+                  </div>
+                )}
+
+                <div className="mt-3 text-xs text-gray-500 italic">{ATTRIBUTION}</div>
+
+                <details className="mt-2 text-xs text-gray-500">
+                  <summary>Debug (raw response)</summary>
+                  <pre className="mt-2 whitespace-pre-wrap break-words">
+                    {JSON.stringify(compose.data, null, 2)}
+                  </pre>
+                </details>
+              </>
+            )}
+          </div>
+
+          {/* Footer with Copy button (always rendered, disabled until content exists) */}
+          <div className="mt-4 pt-2 border-t">
+            <button
+              aria-label="Copy full prayer"
+              title="Copy full prayer"
+              className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+              disabled={!compose.data || sections.length === 0}
+              aria-controls="prayer-output"
+              aria-describedby="copy-status"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(fullPrayer);
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                } catch {}
+              }}
+            >
+              {copied ? "Copied!" : "Copy"}
+            </button>
+
+            {/* Screen-reader live region for copy feedback; Toast will replace this visually in Phase 3 */}
+            <div id="copy-status" role="status" aria-live="polite" className="sr-only">
+              {copied ? "Copied to clipboard" : ""}
+            </div>
+          </div>
+        </section>
+      </div>
+      <Toast show={copied}>Copied to clipboard</Toast>
+    </main>
+  );
+}
