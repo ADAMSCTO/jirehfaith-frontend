@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -46,6 +45,7 @@ function normalizeSections(data: any) {
   }
   return [];
 }
+
 // --- RC7 helpers: tone mapping & recent-avoid list --------------------------
 function mapToneVariant(emotion: string): TComposeRequest["tone_variant"] {
   const e = String(emotion || "").toLowerCase();
