@@ -242,4 +242,28 @@ export default function Home() {
                 onChange={(e) => setPersonName(e.target.value)}
                 placeholder="e.g., John"
                 disabled={compose.isPending}
-                aria-disabled={compose
+                aria-disabled={compose.isPending ? true : undefined}
+              />
+            </div>
+
+            {/* Situation */}
+            <div>
+              <label htmlFor="situation" className="block text-sm font-medium mb-1">
+                Situation (optional)
+              </label>
+                            <input
+                id="situation"
+                type="text"
+                aria-label="Situation"
+                className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                value={situation}
+                onChange={(e) => setSituation(e.target.value)}
+                placeholder="e.g., upcoming surgery"
+                disabled={compose.isPending}
+                aria-disabled={compose.isPending ? true : undefined}
+              />
+            </div>
+
+            {/* Toggle + Compose row */}
+            <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
+              <
