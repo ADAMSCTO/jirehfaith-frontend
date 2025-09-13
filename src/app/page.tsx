@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
+import { getTopics, getNextNonRepeatingVerse, type Verse } from "@/lib/verses";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
@@ -69,6 +70,8 @@ export default function Home() {
   const [situation, setSituation] = useState("");
   const [showAnchor, setShowAnchor] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [topic, setTopic] = useState<string>("comfort");
+  const [verse, setVerse] = useState<Verse | null>(null);
 
   const compose = useMutation({
     mutationFn: async (input: TComposeRequest) => {
@@ -84,6 +87,7 @@ export default function Home() {
       : sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n");
   const fullPrayer = `${prayerBase}\n\n${ATTRIBUTION}`;
   const anchor = (compose.data as any)?.anchor;
+  const topics = getTopics();
 
   return (
         <main
@@ -131,20 +135,52 @@ export default function Home() {
         <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
                     <div
             className="flex-1 min-h-0 space-y-3"
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !compose.isPending) {
-                e.preventDefault();
-                compose.mutate({
-                  emotion,
-                  language: "en",
-                  pronoun_style: pronoun,
-                  person_name: personName ? toTitleCase(personName) : undefined,
-                  situation: normalizeSituation(situation) || undefined,
-                  show_anchor: showAnchor,
-                });
-              }
-            }}
-          >
+onKeyDown={(e) => {
+  if (e.key === "Enter" && !compose.isPending) {
+    e.preventDefault();
+    compose.mutate({
+      emotion,
+      language: "en",
+      pronoun_style: pronoun,
+      person_name: personName ? toTitleCase(personName) : undefined,
+      situation: normalizeSituation(situation) || undefined,
+      show_anchor: showAnchor,
+    });
+  }
+}}
+>
+  {/* Scripture topic + selector */}
+  <div>
+    <label htmlFor="topic" className="block text-sm font-medium mb-1">
+      Scripture topic
+    </label>
+    <div className="flex items-center gap-2">
+      <select
+        id="topic"
+        aria-label="Scripture topic"
+        className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+        value={topic}
+        onChange={(e) => setTopic(e.target.value)}
+        disabled={compose.isPending}
+        aria-disabled={compose.isPending ? true : undefined}
+      >
+        {topics.map((t) => (
+          <option key={t} value={t}>{t}</option>
+        ))}
+      </select>
+      <button
+        type="button"
+        className="inline-flex items-center justify-center rounded-lg bg-black text-white px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+        onClick={() => setVerse(getNextNonRepeatingVerse(topic))}
+        disabled={compose.isPending}
+        aria-disabled={compose.isPending ? true : undefined}
+        title="Show a verse for the selected topic"
+      >
+        Show verse
+      </button>
+    </div>
+  </div>
+
             {/* Emotion */}
             <div>
               <label htmlFor="emotion" className="block text-sm font-medium mb-1">
@@ -301,6 +337,15 @@ export default function Home() {
 
           {/* Content area */}
           <div id="prayer-output" className="flex-1 min-h-0 space-y-4" aria-live="polite" aria-busy={compose.isPending ? true : undefined}>
+{/* Scripture display (if selected) */}
+{verse && (
+  <div className="rounded-md bg-[var(--header)]/20 border p-2">
+    <div className="text-sm font-medium">Scripture</div>
+    <div className="text-sm italic whitespace-pre-wrap">{verse.text}</div>
+    <div className="text-xs mt-1">{verse.reference} ({verse.version})</div>
+  </div>
+)}
+
             {(!compose.data || sections.length === 0) && (
               <p className="text-gray-500 text-sm">No prayer yet.</p>
             )}
