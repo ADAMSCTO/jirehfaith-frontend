@@ -178,6 +178,16 @@ onKeyDown={(e) => {
       >
         Show verse
       </button>
+<button
+  type="button"
+  className="inline-flex items-center justify-center rounded-lg bg-white text-black border px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+  onClick={() => setVerse(null)}
+  disabled={!verse}
+  aria-disabled={!verse ? true : undefined}
+  title="Clear the displayed verse"
+>
+  Clear verse
+</button>
     </div>
   </div>
 
@@ -400,6 +410,17 @@ onKeyDown={(e) => {
             >
               {copied ? "Copied!" : "Copy"}
             </button>
+<button
+  aria-label="Clear prayer output"
+  title="Clear prayer output"
+  className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+  onClick={() => {
+    compose.reset();
+  }}
+  disabled={!compose.data || sections.length === 0}
+>
+  Clear
+</button>
 
             {/* Screen-reader live region for copy feedback; Toast will replace this visually in Phase 3 */}
             <div id="copy-status" role="status" aria-live="polite" className="sr-only">
