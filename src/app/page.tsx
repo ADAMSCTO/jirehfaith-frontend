@@ -92,7 +92,7 @@ export default function Home() {
 
   return (
         <main
-      className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] md:h-[calc(100dvh-72px)] overflow-x-hidden md:overflow-hidden"
+      className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           const details = document.querySelector("details");
@@ -133,7 +133,7 @@ export default function Home() {
 
       <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
         {/* LEFT: form */}
-        <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
+        <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
                     <div
             className="flex-1 min-h-0 space-y-3"
 onKeyDown={(e) => {
@@ -360,7 +360,7 @@ onKeyDown={(e) => {
         </section>
 
         {/* RIGHT: output */}
-        <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
+        <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] flex flex-col">
           {/* Non-sticky header */}
           <div className="mb-3 flex items-center justify-between border-b pb-2">
             <h2 className="text-xl font-medium">Prayer</h2>
