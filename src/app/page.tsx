@@ -303,7 +303,6 @@ export default function Home() {
                       avoid: getRecentAvoid(mapToneVariant(emotion)),
                     },
                   })
-
                 }
               >
                 {compose.isPending ? (
