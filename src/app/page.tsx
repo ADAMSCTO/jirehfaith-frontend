@@ -75,11 +75,17 @@ export default function Home() {
   const [verse, setVerse] = useState<Verse | null>(null);
 
   const compose = useMutation({
-    mutationFn: async (input: TComposeRequest) => {
-      const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
-      return data;
-    },
-  });
+  mutationFn: async (input: TComposeRequest) => {
+    const startedAt = Date.now();
+    const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
+    const elapsed = Date.now() - startedAt;
+    try {
+      localStorage.setItem("jf:lastResponseMs", String(elapsed));
+      localStorage.setItem("jf:lastResponseAt", new Date().toISOString());
+    } catch {}
+    return data;
+  },
+});
 
   const sections = normalizeSections(compose.data);
   const prayerBase =
@@ -401,13 +407,7 @@ onKeyDown={(e) => {
                 )}
 
                 <div className="mt-3 text-xs text-gray-500 italic">{ATTRIBUTION}</div>
-
-                <details className="mt-2 text-xs text-gray-500">
-                  <summary>Debug (raw response)</summary>
-                  <pre className="mt-2 whitespace-pre-wrap break-words">
-                    {JSON.stringify(compose.data, null, 2)}
-                  </pre>
-                </details>
+                
               </>
             )}
           </div>
