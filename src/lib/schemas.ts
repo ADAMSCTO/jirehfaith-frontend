@@ -32,9 +32,28 @@ export type TMapResponse = z.infer<typeof MapResponse>;
 export const ComposeRequest = z.object({
   emotion: z.string().min(1),
   language: z.string().default("en").optional(),
+
+  // Pronouns & person context (existing)
   pronoun_style: z.enum(["i", "we", "he", "she", "they"]).default("we").optional(),
   person_name: z.string().optional(),
+
+  // NEW: Toggle whether we inject the name at all (defaults to true)
+  name_injection: z.boolean().default(true).optional(),
+
+  // Situation text provided by the user
   situation: z.string().optional(),
+
+  // NEW: Tone pack selector for vocabulary/flow
+  tone_variant: z.enum(["gentle", "bold", "comfort", "hope"]).optional(),
+
+  // NEW: Scripture variety rotation
+  verse_rotation: z
+    .object({
+      seed: z.string().optional(),
+      avoid: z.array(z.string()).optional(), // recently used verse IDs
+    })
+    .optional(),
+
   show_anchor: z.boolean().optional(),
 });
 export type TComposeRequest = z.infer<typeof ComposeRequest>;

@@ -45,6 +45,35 @@ function normalizeSections(data: any) {
   }
   return [];
 }
+
+// --- RC7 helpers: tone mapping & recent-avoid list --------------------------
+function mapToneVariant(emotion: string): TComposeRequest["tone_variant"] {
+  const e = String(emotion || "").toLowerCase();
+  if (["grief", "sorrow", "loss"].includes(e)) return "comfort";
+  if (["fear", "anxiety", "worry", "stress"].includes(e)) return "gentle";
+  if (["perseverance", "courage", "resolve"].includes(e)) return "bold";
+  if (["hope", "joy", "love"].includes(e)) return "hope";
+  // default
+  return "gentle";
+}
+
+/**
+ * Reads a small recent-avoid list from localStorage (key: 'recentVerses').
+ * Shape: { [tone: string]: string[] }
+ */
+function getRecentAvoid(tone?: string): string[] {
+  try {
+    const raw = localStorage.getItem("recentVerses");
+    if (!raw) return [];
+    const byTone = JSON.parse(raw) as Record<string, string[]>;
+    if (!tone) return [];
+    const arr = byTone[tone] || [];
+    return Array.isArray(arr) ? arr.filter(Boolean).slice(0, 5) : [];
+  } catch {
+    return [];
+  }
+}
+
 function Toast({ show, children }: { show: boolean; children: ReactNode }) {
   return (
     <div
@@ -86,7 +115,7 @@ export default function Home() {
   const anchor = (compose.data as any)?.anchor;
 
   return (
-        <main
+    <main
       className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] md:h-[calc(100dvh-72px)] overflow-x-hidden md:overflow-hidden"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
@@ -103,9 +132,8 @@ export default function Home() {
           className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
           style={{ color: "var(--brand-gold)" }}
         >
-
           {/* Left icon (praying hands, gold-outline) */}
-                              <img
+          <img
             src="/icons/praying-hands-gold.png"
             alt=""
             aria-hidden="true"
@@ -116,20 +144,19 @@ export default function Home() {
           Prayer Composer with The Holy Bible Scriptures
 
           {/* Right icon (open Bible, gold-outline) */}
-                              <img
+          <img
             src="/open-bible-gold.png"
             alt=""
             aria-hidden="true"
             className="h-8 w-8"
           />
-
         </h1>
       </header>
 
       <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
         {/* LEFT: form */}
         <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] md:h-[calc(100vh-240px)] flex flex-col overflow-auto">
-                    <div
+          <div
             className="flex-1 min-h-0 space-y-3"
             onKeyDown={(e) => {
               if (e.key === "Enter" && !compose.isPending) {
@@ -141,6 +168,12 @@ export default function Home() {
                   person_name: personName ? toTitleCase(personName) : undefined,
                   situation: normalizeSituation(situation) || undefined,
                   show_anchor: showAnchor,
+
+                  // RC7 additions:
+                  tone_variant: mapToneVariant(emotion),
+                  verse_rotation: {
+                    avoid: getRecentAvoid(mapToneVariant(emotion)),
+                  },
                 });
               }
             }}
@@ -150,7 +183,7 @@ export default function Home() {
               <label htmlFor="emotion" className="block text-sm font-medium mb-1">
                 Emotion
               </label>
-                            <select
+              <select
                 id="emotion"
                 aria-label="Emotion"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
@@ -175,14 +208,12 @@ export default function Home() {
               <label htmlFor="pronoun-style" className="block text-sm font-medium mb-1">
                 Pronoun style
               </label>
-                            <select
+              <select
                 id="pronoun-style"
                 aria-label="Pronoun style"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={pronoun}
-                onChange={(e) =>
-                  setPronoun(e.target.value as TComposeRequest["pronoun_style"])
-                }
+                onChange={(e) => setPronoun(e.target.value as TComposeRequest["pronoun_style"])}
                 disabled={compose.isPending}
                 aria-disabled={compose.isPending ? true : undefined}
               >
@@ -199,7 +230,7 @@ export default function Home() {
               <label htmlFor="person-name" className="block text-sm font-medium mb-1">
                 Person name (optional)
               </label>
-                            <input
+              <input
                 id="person-name"
                 type="text"
                 aria-label="Person name"
@@ -217,7 +248,7 @@ export default function Home() {
               <label htmlFor="situation" className="block text-sm font-medium mb-1">
                 Situation (optional)
               </label>
-                            <input
+              <input
                 id="situation"
                 type="text"
                 aria-label="Situation"
@@ -233,7 +264,7 @@ export default function Home() {
             {/* Toggle + Compose row */}
             <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                                <input
+                <input
                   id="show-anchor"
                   type="checkbox"
                   checked={showAnchor}
@@ -246,7 +277,7 @@ export default function Home() {
                 </label>
               </div>
 
-                            <button
+              <button
                 aria-label="Compose prayer"
                 title="Compose prayer"
                 className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
@@ -262,6 +293,12 @@ export default function Home() {
                     person_name: personName ? toTitleCase(personName) : undefined,
                     situation: normalizeSituation(situation) || undefined,
                     show_anchor: showAnchor,
+
+                    // RC7 additions:
+                    tone_variant: mapToneVariant(emotion),
+                    verse_rotation: {
+                      avoid: getRecentAvoid(mapToneVariant(emotion)),
+                    },
                   })
                 }
               >
@@ -338,7 +375,7 @@ export default function Home() {
 
           {/* Footer with Copy button (always rendered, disabled until content exists) */}
           <div className="mt-4 pt-2 border-t">
-                        <button
+            <button
               aria-label="Copy full prayer"
               title="Copy full prayer"
               className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
@@ -363,7 +400,7 @@ export default function Home() {
           </div>
         </section>
       </div>
-          <Toast show={copied}>Copied to clipboard</Toast>
+      <Toast show={copied}>Copied to clipboard</Toast>
     </main>
   );
 }
