@@ -40,6 +40,10 @@ export function selectVerse(input: RotationInput) {
   const avoidSet = new Set((avoid || []).map((s) => s.trim()).filter(Boolean));
   const list = getVersePool(tone);
 
+  if (!list.length) {
+    return { id: "no_verse_found", ref: "No verse available", text: "No verse found for the selected tone." }; // return a default verse
+  }
+
   const candidates = list.filter((v) => !avoidSet.has(v.id));
   if (candidates.length > 0) {
     const idx = chooseIndex(candidates.length, seed);
