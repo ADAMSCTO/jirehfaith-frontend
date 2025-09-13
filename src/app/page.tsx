@@ -45,6 +45,34 @@ function normalizeSections(data: any) {
   }
   return [];
 }
+// --- RC7 helpers: tone mapping & recent-avoid list --------------------------
+function mapToneVariant(emotion: string): TComposeRequest["tone_variant"] {
+  const e = String(emotion || "").toLowerCase();
+  if (["grief", "sorrow", "loss"].includes(e)) return "comfort";
+  if (["fear", "anxiety", "worry", "stress"].includes(e)) return "gentle";
+  if (["perseverance", "courage", "resolve"].includes(e)) return "bold";
+  if (["hope", "joy", "love"].includes(e)) return "hope";
+  // default
+  return "gentle";
+}
+
+/**
+ * Reads a small recent-avoid list from localStorage (key: 'recentVerses').
+ * Shape: { [tone: string]: string[] }
+ */
+function getRecentAvoid(tone?: string): string[] {
+  try {
+    const raw = localStorage.getItem("recentVerses");
+    if (!raw) return [];
+    const byTone = JSON.parse(raw) as Record<string, string[]>;
+    if (!tone) return [];
+    const arr = byTone[tone] || [];
+    return Array.isArray(arr) ? arr.filter(Boolean).slice(0, 5) : [];
+  } catch {
+    return [];
+  }
+}
+
 function Toast({ show, children }: { show: boolean; children: ReactNode }) {
   return (
     <div
@@ -135,12 +163,19 @@ export default function Home() {
               if (e.key === "Enter" && !compose.isPending) {
                 e.preventDefault();
                 compose.mutate({
-                  emotion,
-                  language: "en",
-                  pronoun_style: pronoun,
-                  person_name: personName ? toTitleCase(personName) : undefined,
-                  situation: normalizeSituation(situation) || undefined,
-                  show_anchor: showAnchor,
+  emotion,
+  language: "en",
+  pronoun_style: pronoun,
+  person_name: personName ? toTitleCase(personName) : undefined,
+  situation: normalizeSituation(situation) || undefined,
+  show_anchor: showAnchor,
+
+  // RC7 additions:
+  tone_variant: mapToneVariant(emotion),
+  verse_rotation: {
+    avoid: getRecentAvoid(mapToneVariant(emotion)),
+  },
+})
                 });
               }
             }}
@@ -262,7 +297,14 @@ export default function Home() {
                     person_name: personName ? toTitleCase(personName) : undefined,
                     situation: normalizeSituation(situation) || undefined,
                     show_anchor: showAnchor,
+
+                    // RC7 additions:
+                    tone_variant: mapToneVariant(emotion),
+                    verse_rotation: {
+                      avoid: getRecentAvoid(mapToneVariant(emotion)),
+                    },
                   })
+
                 }
               >
                 {compose.isPending ? (

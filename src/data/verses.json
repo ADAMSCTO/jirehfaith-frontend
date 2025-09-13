@@ -1,0 +1,20 @@
+{
+  "comfort": [
+    { "id": "ps23_1-3", "ref": "Psalm 23:1-3", "text": "The Lord is my shepherd; I shall not want..." },
+    { "id": "mt11_28-30", "ref": "Matthew 11:28-30", "text": "Come to me, all who labor and are heavy laden..." },
+    { "id": "is41_10", "ref": "Isaiah 41:10", "text": "Fear not, for I am with you..." }
+  ],
+  "hope": [
+    { "id": "jr29_11", "ref": "Jeremiah 29:11", "text": "For I know the plans I have for you..." },
+    { "id": "rm15_13", "ref": "Romans 15:13", "text": "May the God of hope fill you with all joy and peace..." },
+    { "id": "ps27_13-14", "ref": "Psalm 27:13-14", "text": "I believe that I shall look upon the goodness of the Lord..." }
+  ],
+  "gentle": [
+    { "id": "ph4_6-7", "ref": "Philippians 4:6-7", "text": "Do not be anxious about anything..." },
+    { "id": "ps34_18", "ref": "Psalm 34:18", "text": "The Lord is near to the brokenhearted..." }
+  ],
+  "bold": [
+    { "id": "js1_9", "ref": "Joshua 1:9", "text": "Be strong and courageous..." },
+    { "id": "ep6_10-11", "ref": "Ephesians 6:10-11", "text": "Be strong in the Lord and in the strength of his might..." }
+  ]
+}
