@@ -266,4 +266,4 @@ export default function Home() {
 
             {/* Toggle + Compose row */}
             <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
-              <
+
