@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
 const DONATE_URL = process.env.NEXT_PUBLIC_DONATE_URL || "#";
@@ -28,26 +27,19 @@ export default function Header() {
           </div>
         </Link>
 
-        {/* Left/Right nav */}
-        <nav className="flex items-center gap-3 text-sm flex-wrap order-3 md:order-none justify-center w-full md:w-auto">
-          {/* HOME (left) — praying hands icon */}
+        {/* Nav buttons — centered under logo */}
+        <nav className="flex items-center gap-3 text-sm flex-wrap order-3 md:order-none justify-center w-full">
+          {/* HOME (🔥 before label) */}
           <Link
             href="/"
             aria-label="Home"
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
           >
-            <Image
-              src="/icons/praying-hands-gold.png"
-              alt="Home"
-              width={20}
-              height={20}
-              priority
-            />
-            Home
+            🔥 Home
           </Link>
 
-          {/* DONATE (middle) */}
+          {/* DONATE */}
           <a
             href={DONATE_URL}
             aria-label="Donate"
@@ -59,26 +51,17 @@ export default function Header() {
             ❤️ Donate
           </a>
 
-          {/* ABOUT (right) — ✝️ + open bible icon */}
+          {/* ABOUT (✝️ before label) */}
           <Link
             href="/about"
             aria-label="About"
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
           >
-            ✝️
-            <Image
-              src="/icons/open-bible-gold.png"
-              alt="About"
-              width={20}
-              height={20}
-              priority
-            />
-            About
+            ✝️ About
           </Link>
         </nav>
       </div>
     </header>
   );
 }
-
