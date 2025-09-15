@@ -2,9 +2,6 @@
 
 import Link from "next/link";
 
-const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
-const DONATE_URL = process.env.NEXT_PUBLIC_DONATE_URL || "#";
-
 export default function Header() {
   return (
     <header className="w-full sticky top-0 z-10 bg-[var(--header)] backdrop-blur border-b border-black/10">
@@ -39,17 +36,15 @@ export default function Header() {
             🔥 Home
           </Link>
 
-          {/* DONATE */}
-          <a
-            href={DONATE_URL}
+                   {/* DONATE */}
+          <Link
+            href="/donate"
             aria-label="Donate"
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
-            target="_blank"
-            rel="noreferrer"
           >
             ❤️ Donate
-          </a>
+          </Link>
 
           {/* ABOUT (✝️ before label) */}
           <Link
