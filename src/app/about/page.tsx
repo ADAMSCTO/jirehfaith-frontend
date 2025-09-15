@@ -1,126 +1,70 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
+
 export default function AboutPage() {
+  const [lang, setLangState] = useState<Lang>("en");
+
+  useEffect(() => {
+    const current = getLang();
+    setLangState(current);
+    preloadCurrentLang();
+    const unsub = onLangChange((l) => setLangState(l));
+    return () => unsub();
+  }, []);
+
   return (
-    <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white">
-      <h1
-        className="text-3xl font-bold mb-4"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        About JirehFaith
-      </h1>
+    <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
+      <h1 className="text-3xl font-bold mb-4">{t("about.title", lang)}</h1>
 
-      <p>
-        At Jireh Faith, we believe that when life speaks — in joy, in sorrow, in
-        fear, or in gratitude — the most powerful response comes from God’s Word.
-      </p>
+      <p>{t("about.p1", lang)}</p>
 
-      <p>
-        Rooted in the promise of Jehovah Jireh — “The Lord will provide”
-        (Genesis 22:14) — JirehFaith is a prayer companion designed to bring
-        Scripture into your everyday circumstances. Whether you are seeking peace
-        in moments of anxiety, strength in times of trial, or a voice of
-        thanksgiving in seasons of blessing, JirehFaith helps guide your prayers
-        through the living Word of God.
-      </p>
+      <p>{t("about.p2", lang)}</p>
 
-      <h2
-        className="text-2xl font-semibold mt-6"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        Our Mission
-      </h2>
-      <p>
-        To provide personalized, Scripture-based prayers that meet people where
-        they are, offering comfort, encouragement, and hope — all while pointing
-        back to the eternal faithfulness of God.
-      </p>
+      <h2 className="text-2xl font-semibold mt-6">{t("about.mission.h", lang)}</h2>
+      <p>{t("about.mission.p", lang)}</p>
 
-      <h2
-        className="text-2xl font-semibold mt-6"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        How It Works
-      </h2>
+      <h2 className="text-2xl font-semibold mt-6">{t("about.how.h", lang)}</h2>
       <ol className="list-decimal pl-6 space-y-2">
         <li>
-          <strong style={{ color: "var(--brand-gold)" }}>Share Your Need:</strong>
-          <span> Select or describe your circumstance.</span>
+          <strong>{t("about.how.1", lang).split(":")[0]}:</strong>
+          <span> {t("about.how.1", lang).split(":").slice(1).join(":").trim()}</span>
         </li>
         <li>
-          <strong style={{ color: "var(--brand-gold)" }}>Scripture Speaks:</strong>
-          <span> JirehFaith finds Bible passages that directly reflect your situation.</span>
+          <strong>{t("about.how.2", lang).split(":")[0]}:</strong>
+          <span> {t("about.how.2", lang).split(":").slice(1).join(":").trim()}</span>
         </li>
         <li>
-          <strong style={{ color: "var(--brand-gold)" }}>Prayer is Formed:</strong>
-          <span> A heartfelt prayer is generated, rooted in the Word, shaped to inspire faith and trust in God’s provision.</span>
+          <strong>{t("about.how.3", lang).split(":")[0]}:</strong>
+          <span> {t("about.how.3", lang).split(":").slice(1).join(":").trim()}</span>
         </li>
       </ol>
 
-      <p>
-        Every prayer includes a relevant Bible verse, so you not only receive
-        encouragement but also deepen your walk with God through His Word.
-      </p>
+      <p>{t("about.vision.p", lang)}</p>
 
-      <h2
-        className="text-2xl font-semibold mt-6"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        What Makes JirehFaith Unique
-      </h2>
+      <h2 className="text-2xl font-semibold mt-6">{t("about.unique.h", lang)}</h2>
       <ul className="list-disc pl-6 space-y-2">
-        <li>
-          <strong style={{ color: "var(--brand-gold)" }}>Scripture First:</strong>
-          <span> Every prayer is anchored in the Bible.</span>
-        </li>
-        <li>
-          <strong style={{ color: "var(--brand-gold)" }}>Emotionally Attuned:</strong>
-          <span> Through the Default Human Logic Layer (DHLL), prayers are shaped with sensitivity to real human emotions.</span>
-        </li>
-        <li>
-          <strong style={{ color: "var(--brand-gold)" }}>Multi-Language:</strong>
-          <span> Available in English, French, Spanish, and Portuguese.</span>
-        </li>
-        <li>
-          <strong style={{ color: "var(--brand-gold)" }}>Accessible for All:</strong>
-          <span> Free daily prayers, with subscriptions and donations helping sustain the mission.</span>
-        </li>
+        <li>{t("about.unique.1", lang)}</li>
+        <li>{t("about.unique.2", lang)}</li>
+        <li>{t("about.unique.3", lang)}</li>
+        <li>{t("about.unique.4", lang)}</li>
       </ul>
 
-      <h2
-        className="text-2xl font-semibold mt-6"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        Our Vision
-      </h2>
-      <p>
-        We envision a world where no believer prays alone. With JirehFaith, every
-        Christian can carry a source of Scripture-inspired prayer in their pocket
-        — a reminder of God’s faithfulness, presence, and provision in every
-        circumstance of life.
-      </p>
+      <h2 className="text-2xl font-semibold mt-6">{t("about.vision.h", lang)}</h2>
+      <p>{t("about.vision.p", lang)}</p>
 
-      <h2
-        className="text-2xl font-semibold mt-6"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        Our Ministry
-      </h2>
-      <p>
-        Please support our ministry through Donation or Subscription. Share the
-        Scriptures with others!
-      </p>
+      <h2 className="text-2xl font-semibold mt-6">{t("about.ministry.h", lang)}</h2>
+      <p>{t("about.ministry.p", lang)}</p>
 
-      <p className="mt-6 font-semibold">
-        God’s Blessings be upon you always!
-      </p>
+      <p className="mt-6 font-semibold">{t("about.blessing", lang)}</p>
 
       <div className="mt-8">
         <a
           href="/tech-info"
           className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition"
         >
-          Tech Info
+          {t("about.cta.tech", lang)}
         </a>
       </div>
 
@@ -130,7 +74,7 @@ export default function AboutPage() {
           href="/donate"
           className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition"
         >
-          Donate
+          {t("about.cta.donate", lang)}
         </a>
       </div>
     </main>
