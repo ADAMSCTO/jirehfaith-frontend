@@ -2,22 +2,36 @@
 
 import { useEffect, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
+// Hard fallback: import English dictionary so About never shows raw keys
+import en from "@/i18n/en.json";
+
+// Resolve dot-path keys like "about.mission.h" from a JSON object
+function fromDict(obj: any, path: string): string {
+  try {
+    return String(path.split(".").reduce((o: any, k: string) => (o ? o[k] : undefined), obj) ?? "");
+  } catch {
+    return "";
+  }
+}
 
 export default function AboutPage() {
   const [lang, setLangState] = useState<Lang>("en");
 
-  // English-fallback translator: if current locale is missing a key, show EN
+  // English-fallback translator: try current language via t(); if it returns the key,
+  // fall back to the value from en.json (guaranteed).
   const tt = (key: string) => {
     const v = t(key, lang);
-    return v === key ? t(key, "en") : v;
+    if (v !== key) return v;
+    const enVal = fromDict(en as any, key);
+    return enVal || key; // last resort: show key (shouldn’t happen with en present)
   };
 
   useEffect(() => {
     const current = getLang();
     setLangState(current);
-    preloadCurrentLang();
+    try { preloadCurrentLang(); } catch {}
     const unsub = onLangChange((l) => setLangState(l));
-    return () => unsub();
+    return () => { try { unsub(); } catch {} };
   }, []);
 
   return (
@@ -25,7 +39,6 @@ export default function AboutPage() {
       <h1 className="text-3xl font-bold mb-4">{tt("about.title")}</h1>
 
       <p>{tt("about.p1")}</p>
-
       <p>{tt("about.p2")}</p>
 
       <h2 className="text-2xl font-semibold mt-6">{tt("about.mission.h")}</h2>
@@ -76,16 +89,12 @@ export default function AboutPage() {
             try {
               e.preventDefault();
               window.location.href = "/tech-info";
-            } catch {
-              /* no-op fallback */
-            }
+            } catch {}
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter" || e.key === " ") {
               e.preventDefault();
-              try {
-                window.location.href = "/tech-info";
-              } catch {}
+              try { window.location.href = "/tech-info"; } catch {}
             }
           }}
           className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition cursor-pointer"
