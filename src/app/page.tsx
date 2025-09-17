@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
 import { getTopics, getNextNonRepeatingVerse, type Verse } from "@/lib/verses";
+import { getLang, onLangChange, preloadCurrentLang, type Lang } from "@/lib/i18n";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
@@ -73,6 +74,16 @@ export default function Home() {
   const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
   const [topic, setTopic] = useState<string>("comfort");
   const [verse, setVerse] = useState<Verse | null>(null);
+  // Keep page language in sync with global i18n (controlled by Header selector)
+  useEffect(() => {
+    try { preloadCurrentLang(); } catch {}
+    const current = getLang();
+    setLang(current as "en" | "es" | "fr" | "pt");
+    const unsub = onLangChange((l: Lang) => setLang(l as "en" | "es" | "fr" | "pt"));
+    return () => {
+      try { if (typeof unsub === "function") unsub(); } catch {}
+    };
+  }, []);
 
   const compose = useMutation({
   mutationFn: async (input: TComposeRequest) => {
@@ -238,28 +249,6 @@ onKeyDown={(e) => {
                 <option value="joy">joy</option>
               </select>
             </div>
-{/* Language */}
-<div>
-  <label htmlFor="language" className="block text-sm font-medium mb-1">
-    Language
-  </label>
-  <select
-    id="language"
-    name="language"
-    aria-label="Language"
-    autoComplete="off"
-    className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-    value={lang}
-    onChange={(e) => setLang(e.target.value as "en" | "es" | "fr" | "pt")}
-    disabled={compose.isPending}
-    aria-disabled={compose.isPending ? true : undefined}
-  >
-    <option value="en">English</option>
-    <option value="es">Español (preview)</option>
-    <option value="fr">Français (aperçu)</option>
-    <option value="pt">Português (prévia)</option>
-  </select>
-</div>
 
             {/* Pronoun style */}
             <div>
