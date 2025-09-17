@@ -95,6 +95,8 @@ export default function Home() {
   const fullPrayer = `${prayerBase}\n\n${ATTRIBUTION}`;
   const anchor = (compose.data as any)?.anchor;
   const topics = getTopics();
+  const hasPrayer = sections.length > 0;
+  const hasOutput = hasPrayer || !!verse;
 
   return (
         <main
@@ -161,10 +163,12 @@ onKeyDown={(e) => {
     <label htmlFor="topic" className="block text-sm font-medium mb-1">
       Scripture topic
     </label>
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap w-full">
       <select
         id="topic"
+        name="topic"
         aria-label="Scripture topic"
+        autoComplete="off"
         className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
         value={topic}
         onChange={(e) => setTopic(e.target.value)}
@@ -178,7 +182,12 @@ onKeyDown={(e) => {
       <button
         type="button"
         className="inline-flex items-center justify-center rounded-lg bg-black text-white px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-        onClick={() => setVerse(getNextNonRepeatingVerse(topic))}
+        onClick={() => {
+         setVerse(getNextNonRepeatingVerse(topic));
+         setTimeout(() => {
+          document.getElementById("prayer-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
+         }, 0);
+        }}
         disabled={compose.isPending}
         aria-disabled={compose.isPending ? true : undefined}
         title="Show a verse for the selected topic"
@@ -188,7 +197,12 @@ onKeyDown={(e) => {
 <button
   type="button"
   className="inline-flex items-center justify-center rounded-lg bg-white text-black border px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-  onClick={() => setVerse(null)}
+  onClick={() => {
+  setVerse(null);
+  setTimeout(() => {
+    document.getElementById("prayer-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 0);
+}}
   disabled={!verse}
   aria-disabled={!verse ? true : undefined}
   title="Clear the displayed verse"
@@ -205,7 +219,9 @@ onKeyDown={(e) => {
               </label>
                             <select
                 id="emotion"
+                name="emotion"
                 aria-label="Emotion"
+                autoComplete="off"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={emotion}
                 onChange={(e) => setEmotion(e.target.value)}
@@ -229,7 +245,9 @@ onKeyDown={(e) => {
   </label>
   <select
     id="language"
+    name="language"
     aria-label="Language"
+    autoComplete="off"
     className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
     value={lang}
     onChange={(e) => setLang(e.target.value as "en" | "es" | "fr" | "pt")}
@@ -250,7 +268,9 @@ onKeyDown={(e) => {
               </label>
                             <select
                 id="pronoun-style"
+                name="pronoun_style"
                 aria-label="Pronoun style"
+                autoComplete="off"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={pronoun}
                 onChange={(e) =>
@@ -274,8 +294,10 @@ onKeyDown={(e) => {
               </label>
                             <input
                 id="person-name"
+                name="person_name"
                 type="text"
                 aria-label="Person name"
+                autoComplete="given-name"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={personName}
                 onChange={(e) => setPersonName(e.target.value)}
@@ -292,8 +314,10 @@ onKeyDown={(e) => {
               </label>
                             <input
                 id="situation"
+                name="situation"
                 type="text"
                 aria-label="Situation"
+                autoComplete="off"
                 className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 value={situation}
                 onChange={(e) => setSituation(e.target.value)}
@@ -308,6 +332,7 @@ onKeyDown={(e) => {
               <div className="flex items-center gap-2">
                                 <input
                   id="show-anchor"
+                  name="show_anchor"
                   type="checkbox"
                   checked={showAnchor}
                   onChange={(e) => setShowAnchor(e.target.checked)}
@@ -418,7 +443,7 @@ onKeyDown={(e) => {
               aria-label="Copy full prayer"
               title="Copy full prayer"
               className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-              disabled={!compose.data || sections.length === 0}
+              disabled={!hasPrayer}
               aria-controls="prayer-output"
               aria-describedby="copy-status"
               onClick={async () => {
@@ -436,9 +461,11 @@ onKeyDown={(e) => {
   title="Clear prayer output"
   className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
   onClick={() => {
+    setVerse(null);
     compose.reset();
   }}
-  disabled={!compose.data || sections.length === 0}
+  disabled={!hasOutput}
+  aria-disabled={!hasOutput ? true : undefined}
 >
   Clear
 </button>
