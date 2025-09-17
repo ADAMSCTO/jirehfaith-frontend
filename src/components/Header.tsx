@@ -27,7 +27,7 @@ export default function Header() {
 
   return (
     <header className="w-full sticky top-0 z-10 bg-[var(--header)] backdrop-blur border-b border-black/10">
-      <div className="mx-auto max-w-5xl px-4 py-1 flex items-center justify-between flex-wrap gap-2">
+      <div className="mx-auto max-w-5xl px-4 py-1 flex flex-col items-center justify-center gap-3">
                 {/* Center title / logo block */}
         <a
           href="/"
