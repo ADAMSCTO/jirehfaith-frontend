@@ -48,7 +48,7 @@ export default function Header() {
         </a>
 
         {/* Nav buttons — centered under logo */}
-        <nav className="flex items-center gap-3 text-sm flex-wrap order-3 md:order-none justify-center w-full">
+        <nav className="flex items-center gap-3 text-sm flex-wrap order-3 md:order-none justify-center w-full md:w-auto">
                     {/* HOME */}
           <a
             href="/"
@@ -90,7 +90,9 @@ export default function Header() {
             autoComplete="off"
             value={lang}
             onChange={handleLangChange}
-            className="ml-2 px-2 py-1 border rounded-md bg-white text-black"
+            title="Language"
+            className="ml-2 md:ml-6 px-2 py-1 border rounded-md bg-white text-black shrink-0"
+            style={{ borderColor: "var(--brand-gold)" }}
           >
             <option value="en">{tt("lang.en", "English")}</option>
             <option value="es">{tt("lang.es", "Español")}</option>
