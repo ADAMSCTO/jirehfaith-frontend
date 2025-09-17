@@ -2,28 +2,63 @@
 
 import { useEffect, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
-// Hard fallback: import English dictionary so About never shows raw keys
-import en from "@/i18n/en.json";
 
-// Resolve dot-path keys like "about.mission.h" from a JSON object
-function fromDict(obj: any, path: string): string {
-  try {
-    return String(path.split(".").reduce((o: any, k: string) => (o ? o[k] : undefined), obj) ?? "");
-  } catch {
-    return "";
+// Embedded English fallback so About never shows raw keys, even if i18n loader fails
+const EN_ABOUT = {
+  title: "About JirehFaith",
+  p1: "At Jireh Faith, we believe that when life speaks — in joy, in sorrow, in fear, or in gratitude — the most powerful response comes from God’s Word.",
+  p2: "Rooted in the promise of Jehovah Jireh — “The Lord will provide” (Genesis 22:14) — JirehFaith is a prayer companion designed to bring Scripture into your everyday circumstances.",
+  mission: {
+    h: "Our Mission",
+    p: "To provide personalized, Scripture-based prayers that meet people where they are, offering comfort, encouragement, and hope — pointing back to God’s faithfulness.",
+  },
+  how: {
+    h: "How It Works",
+    "1": "Share Your Need: Select or describe your circumstance.",
+    "2": "Scripture Speaks: JirehFaith finds Bible passages reflecting your situation.",
+    "3": "Prayer is Formed: A heartfelt prayer is generated, rooted in the Word.",
+  },
+  unique: {
+    h: "What Makes JirehFaith Unique",
+    "1": "Scripture First — every prayer anchored in the Bible.",
+    "2": "Emotionally Attuned — powered by DHLL for human sensitivity.",
+    "3": "Multi-Language — English, French, Spanish, Portuguese.",
+    "4": "Accessible for All — free daily prayers; subscriptions and donations sustain the mission.",
+  },
+  vision: {
+    h: "Our Vision",
+    p: "We envision a world where no believer prays alone.",
+  },
+  ministry: {
+    h: "Our Ministry",
+    p: "Please support our ministry through Donation or Subscription. Share the Scriptures with others!",
+  },
+  blessing: "God’s Blessings be upon you always!",
+  cta: {
+    tech: "Tech Info",
+    donate: "Donate",
+  },
+} as const;
+
+// Minimal resolver for keys like "about.mission.h"
+function fromEnAbout(path: string): string {
+  if (!path.startsWith("about.")) return "";
+  const parts = path.replace(/^about\./, "").split(".");
+  let cur: any = EN_ABOUT;
+  for (const p of parts) {
+    cur = cur?.[p];
+    if (cur == null) return "";
   }
+  return String(cur ?? "");
 }
 
 export default function AboutPage() {
   const [lang, setLangState] = useState<Lang>("en");
 
-  // English-fallback translator: try current language via t(); if it returns the key,
-  // fall back to the value from en.json (guaranteed).
+  // Fallback translator: try active locale; if it returns the key, use embedded EN
   const tt = (key: string) => {
     const v = t(key, lang);
-    if (v !== key) return v;
-    const enVal = fromDict(en as any, key);
-    return enVal || key; // last resort: show key (shouldn’t happen with en present)
+    return v !== key ? v : fromEnAbout(key) || key;
   };
 
   useEffect(() => {
