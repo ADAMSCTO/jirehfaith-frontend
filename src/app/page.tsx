@@ -74,6 +74,7 @@ export default function Home() {
   const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
   const [topic, setTopic] = useState<string>("comfort");
   const [verse, setVerse] = useState<Verse | null>(null);
+  const [clearNonce, setClearNonce] = useState(0);
   // Keep page language in sync with global i18n (controlled by Header selector)
   useEffect(() => {
     try { preloadCurrentLang(); } catch {}
@@ -387,7 +388,7 @@ onKeyDown={(e) => {
           </div>
 
           {/* Content area */}
-          <div id="prayer-output" className="flex-1 min-h-0 space-y-4" aria-live="polite" aria-busy={compose.isPending ? true : undefined}>
+          <div id="prayer-output" key={clearNonce} className="flex-1 min-h-0 space-y-4" aria-live="polite" aria-busy={compose.isPending ? true : undefined}>
 {/* Scripture display (if selected) */}
 {verse && (
   <div className="rounded-md bg-[var(--header)]/20 border p-2">
@@ -452,6 +453,7 @@ onKeyDown={(e) => {
   onClick={() => {
     setVerse(null);
     compose.reset();
+    setClearNonce((n) => n + 1);
   }}
   disabled={!hasOutput}
   aria-disabled={!hasOutput ? true : undefined}
