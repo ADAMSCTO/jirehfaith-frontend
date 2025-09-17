@@ -51,6 +51,8 @@ body {
 /* Center site header/title/tagline reliably */
 header, .site-header, .jf-header {
   text-align: center;
+  background: var(--header);  /* Apply royal purple background */
+  color: var(--foreground);   /* Ensure text color is readable */
 }
 h1, h2 {
   margin: 0.25rem 0;
