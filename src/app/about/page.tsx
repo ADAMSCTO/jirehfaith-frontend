@@ -68,15 +68,6 @@ export default function AboutPage() {
         </a>
       </div>
 
-      {/* Support JirehFaith — Donate callout */}
-      <div className="mt-4">
-        <a
-          href="/donate"
-          className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition"
-        >
-          {t("about.cta.donate", lang)}
-        </a>
-      </div>
     </main>
   );
 }
