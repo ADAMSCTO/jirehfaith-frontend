@@ -12,6 +12,36 @@
     "text": "Come to me, all who labor and are heavy laden, and I will give you rest."
   },
   {
+    "topic": "comfort",
+    "reference": "Psalm 23:4",
+    "version": "ESV",
+    "text": "Even though I walk through the valley of the shadow of death, I will fear no evil, for you are with me; your rod and your staff, they comfort me."
+  },
+  {
+    "topic": "comfort",
+    "reference": "2 Corinthians 1:3-4",
+    "version": "ESV",
+    "text": "Blessed be the God and Father of our Lord Jesus Christ, the Father of mercies and God of all comfort, who comforts us in all our affliction."
+  },
+  {
+    "topic": "comfort",
+    "reference": "Isaiah 66:13",
+    "version": "ESV",
+    "text": "As one whom his mother comforts, so I will comfort you; you shall be comforted in Jerusalem."
+  },
+  {
+    "topic": "comfort",
+    "reference": "John 14:16",
+    "version": "ESV",
+    "text": "And I will ask the Father, and he will give you another Helper, to be with you forever."
+  },
+  {
+    "topic": "comfort",
+    "reference": "Revelation 21:4",
+    "version": "ESV",
+    "text": "He will wipe away every tear from their eyes, and death shall be no more, neither shall there be mourning, nor crying, nor pain anymore."
+  },
+  {
     "topic": "faith",
     "reference": "Hebrews 11:1",
     "version": "ESV",
@@ -24,10 +54,70 @@
     "text": "All things are possible for one who believes."
   },
   {
+    "topic": "faith",
+    "reference": "Romans 10:17",
+    "version": "ESV",
+    "text": "So faith comes from hearing, and hearing through the word of Christ."
+  },
+  {
+    "topic": "faith",
+    "reference": "Luke 17:6",
+    "version": "ESV",
+    "text": "And the Lord said, 'If you had faith like a grain of mustard seed, you could say to this mulberry tree, ‘Be uprooted and planted in the sea,’ and it would obey you.'"
+  },
+  {
+    "topic": "faith",
+    "reference": "James 1:6",
+    "version": "ESV",
+    "text": "But let him ask in faith, with no doubting, for the one who doubts is like a wave of the sea that is driven and tossed by the wind."
+  },
+  {
+    "topic": "faith",
+    "reference": "Matthew 17:20",
+    "version": "ESV",
+    "text": "He said to them, 'Because of your little faith. For truly, I say to you, if you have faith like a grain of mustard seed, you will say to this mountain, ‘Move from here to there,’ and it will move, and nothing will be impossible for you.'"
+  },
+  {
     "topic": "gratitude",
     "reference": "1 Thessalonians 5:18",
     "version": "ESV",
     "text": "Give thanks in all circumstances; for this is the will of God in Christ Jesus for you."
+  },
+  {
+    "topic": "gratitude",
+    "reference": "Colossians 3:15",
+    "version": "ESV",
+    "text": "And let the peace of Christ rule in your hearts, to which indeed you were called in one body. And be thankful."
+  },
+  {
+    "topic": "gratitude",
+    "reference": "Psalm 107:1",
+    "version": "ESV",
+    "text": "Oh give thanks to the Lord, for he is good, for his steadfast love endures forever!"
+  },
+  {
+    "topic": "gratitude",
+    "reference": "Psalm 136:1",
+    "version": "ESV",
+    "text": "Give thanks to the Lord, for he is good, for his steadfast love endures forever."
+  },
+  {
+    "topic": "gratitude",
+    "reference": "Philippians 4:6",
+    "version": "ESV",
+    "text": "Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God."
+  },
+  {
+    "topic": "gratitude",
+    "reference": "Ephesians 5:20",
+    "version": "ESV",
+    "text": "Giving thanks always and for everything to God the Father in the name of our Lord Jesus Christ."
+  },
+  {
+    "topic": "gratitude",
+    "reference": "Psalm 118:1",
+    "version": "ESV",
+    "text": "Oh give thanks to the Lord, for he is good; for his steadfast love endures forever!"
   },
   {
     "topic": "strength",
@@ -36,15 +126,117 @@
     "text": "Fear not, for I am with you; be not dismayed, for I am your God; I will strengthen you, I will help you, I will uphold you with my righteous right hand."
   },
   {
+    "topic": "strength",
+    "reference": "Philippians 4:13",
+    "version": "ESV",
+    "text": "I can do all things through him who strengthens me."
+  },
+  {
+    "topic": "strength",
+    "reference": "Nehemiah 8:10",
+    "version": "ESV",
+    "text": "Do not be grieved, for the joy of the Lord is your strength."
+  },
+  {
+    "topic": "strength",
+    "reference": "Psalm 18:32",
+    "version": "ESV",
+    "text": "The God who equipped me with strength and made my way blameless."
+  },
+  {
+    "topic": "strength",
+    "reference": "Exodus 15:2",
+    "version": "ESV",
+    "text": "The Lord is my strength and my song, and he has become my salvation."
+  },
+  {
+    "topic": "strength",
+    "reference": "Isaiah 40:31",
+    "version": "ESV",
+    "text": "But they who wait for the Lord shall renew their strength; they shall mount up with wings like eagles; they shall run and not be weary; they shall walk and not faint."
+  },
+  {
+    "topic": "strength",
+    "reference": "Psalm 46:1",
+    "version": "ESV",
+    "text": "God is our refuge and strength, a very present help in trouble."
+  },
+  {
     "topic": "peace",
     "reference": "Philippians 4:6-7",
     "version": "ESV",
     "text": "Do not be anxious about anything, but in everything by prayer and supplication with thanksgiving let your requests be made known to God. And the peace of God, which surpasses all understanding, will guard your hearts and your minds in Christ Jesus."
   },
   {
+    "topic": "peace",
+    "reference": "John 14:27",
+    "version": "ESV",
+    "text": "Peace I leave with you; my peace I give to you. Not as the world gives do I give to you. Let not your hearts be troubled, neither let them be afraid."
+  },
+  {
+    "topic": "peace",
+    "reference": "Romans 15:13",
+    "version": "ESV",
+    "text": "May the God of hope fill you with all joy and peace in believing, so that by the power of the Holy Spirit you may abound in hope."
+  },
+  {
+    "topic": "peace",
+    "reference": "Isaiah 26:3",
+    "version": "ESV",
+    "text": "You keep him in perfect peace whose mind is stayed on you, because he trusts in you."
+  },
+  {
+    "topic": "peace",
+    "reference": "Psalm 29:11",
+    "version": "ESV",
+    "text": "May the Lord give strength to his people! May the Lord bless his people with peace!"
+  },
+  {
+    "topic": "peace",
+    "reference": "Matthew 5:9",
+    "version": "ESV",
+    "text": "Blessed are the peacemakers, for they shall be called sons of God."
+  },
+  {
+    "topic": "peace",
+    "reference": "John 16:33",
+    "version": "ESV",
+    "text": "I have said these things to you, that in me you may have peace. In the world you will have tribulation. But take heart; I have overcome the world."
+  },
+  {
     "topic": "hope",
     "reference": "Jeremiah 29:11",
     "version": "ESV",
     "text": "For I know the plans I have for you, declares the Lord, plans for welfare and not for evil, to give you a future and a hope."
+  },
+  {
+    "topic": "hope",
+    "reference": "Romans 15:13",
+    "version": "ESV",
+    "text": "May the God of hope fill you with all joy and peace in believing, so that by the power of the Holy Spirit you may abound in hope."
+  },
+  {
+    "topic": "hope",
+    "reference": "Psalm 42:11",
+    "version": "ESV",
+    "text": "Why are you cast down, O my soul, and why are you in turmoil within me? Hope in God; for I shall again praise him, my salvation and my God."
+  },
+  {
+    "topic": "hope",
+    "reference": "Lamentations 3:21-23",
+    "version": "ESV",
+    "text": "But this I call to mind, and therefore I have hope: The steadfast love of the Lord never ceases; his mercies never come to an end; they are new every morning; great is your faithfulness."
+  },
+  {
+    "topic": "hope",
+    "reference": "Romans 5:3-5",
+    "version": "ESV",
+    "text": "Not only that, but we rejoice in our sufferings, knowing that suffering produces endurance, and endurance produces character, and character produces hope, and hope does not put us to shame, because God’s love has been poured into our hearts through the Holy Spirit who has been given to us."
+  },
+  {
+    "topic": "hope",
+    "reference": "Isaiah 40:31",
+    "version": "ESV",
+    "text": "But they who wait for the Lord shall renew their strength; they shall mount up with wings like eagles; they shall run and not be weary; they shall walk and not faint."
   }
 ]
