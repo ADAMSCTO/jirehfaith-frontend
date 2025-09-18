@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
 // Minimal safeT helper for fallback
-const safeT = (key: string, lang: string) => t(key, lang) || key;
+const safeT = (key: string, lang: Lang | undefined) => t(key, lang || "en") || key;
 
 export default function TechInfoPage() {
   const [lang, setLangState] = useState<Lang>("en");
