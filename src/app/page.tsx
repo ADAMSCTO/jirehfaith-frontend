@@ -122,6 +122,16 @@ export default function Home() {
   const topics = getTopics();
   const hasPrayer = sections.length > 0;
   const hasOutput = hasPrayer || !!verse;
+  // When a new prayer appears, scroll the output into view
+  useEffect(() => {
+    if (hasPrayer) {
+      try {
+        document
+          .getElementById("prayer-output")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {}
+    }
+  }, [hasPrayer]);
 
   return (
         <main
