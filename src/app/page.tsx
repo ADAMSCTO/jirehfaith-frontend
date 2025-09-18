@@ -85,6 +85,19 @@ export default function Home() {
       try { if (typeof unsub === "function") unsub(); } catch {}
     };
   }, []);
+  // Always start at top when landing on Home (fixes half-way render on return)
+  useEffect(() => {
+    try {
+      // Try instant if supported
+      (window as any).scrollTo({ top: 0, left: 0, behavior: "instant" });
+    } catch {
+      try { window.scrollTo(0, 0); } catch {}
+    }
+    const top = document.getElementById("page-top");
+    if (top && typeof top.scrollIntoView === "function") {
+      try { (top as any).scrollIntoView({ behavior: "instant", block: "start" }); } catch {}
+    }
+  }, []);
 
   const compose = useMutation({
   mutationFn: async (input: TComposeRequest) => {
@@ -112,6 +125,7 @@ export default function Home() {
 
   return (
         <main
+      id="page-top"
       className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
