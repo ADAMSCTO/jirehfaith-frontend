@@ -85,19 +85,25 @@ export default function Home() {
       try { if (typeof unsub === "function") unsub(); } catch {}
     };
   }, []);
-  // Always start at top when landing on Home (fixes half-way render on return)
-  useEffect(() => {
+  const compose = useMutation({
+  mutationFn: async (input: TComposeRequest) => {
+    const startedAt = Date.now();
+    const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
+    const elapsed = Date.now() - startedAt;
     try {
-      // Try instant if supported
-      (window as any).scrollTo({ top: 0, left: 0, behavior: "instant" });
-    } catch {
-      try { window.scrollTo(0, 0); } catch {}
-    }
-    const top = document.getElementById("page-top");
-    if (top && typeof top.scrollIntoView === "function") {
-      try { (top as any).scrollIntoView({ behavior: "instant", block: "start" }); } catch {}
-    }
-  }, []);
+      localStorage.setItem("jf:lastResponseMs", String(elapsed));
+      localStorage.setItem("jf:lastResponseAt", new Date().toISOString());
+    } catch {}
+    return data;
+  },
+  onSuccess: () => {
+    try {
+      document
+        .getElementById("prayer-output")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    } catch {}
+  },
+});
 
   const compose = useMutation({
   mutationFn: async (input: TComposeRequest) => {
