@@ -114,31 +114,16 @@ export default function AboutPage() {
       <p className="mt-6 font-semibold">{tt("about.blessing")}</p>
 
       <div className="mt-8">
-        <a
-          id="tech-info-cta"
-          href="/tech-info"
-          role="link"
-          target="_self"
-          tabIndex={0}
-          onClick={(e) => {
-            try {
-              e.preventDefault();
-              window.location.href = "/tech-info";
-            } catch {}
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              try { window.location.href = "/tech-info"; } catch {}
-            }
-          }}
-          className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition cursor-pointer"
-          aria-label={tt("about.cta.tech")}
-          title={tt("about.cta.tech")}
-        >
-          {tt("about.cta.tech")}
-        </a>
-      </div>
+  <a
+    id="tech-info-cta"
+    href="/tech-info"
+    className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition cursor-pointer"
+    aria-label={tt("about.cta.tech")}
+    title={tt("about.cta.tech")}
+  >
+    {tt("about.cta.tech")}
+  </a>
+</div>
     </main>
   );
 }
