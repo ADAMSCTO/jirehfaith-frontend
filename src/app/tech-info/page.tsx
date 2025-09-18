@@ -25,6 +25,10 @@ export default function TechInfoPage() {
     return () => unsub();
   }, []);
 
+  // Log the result of t() for tech.h and tech.p before returning the JSX
+  console.log('Translation for tech.h:', t("tech.h", lang));  // Log translation result for tech.h
+  console.log('Translation for tech.p:', t("tech.p", lang));  // Log translation result for tech.p
+
   return (
     <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
       <h1 className="text-3xl font-bold mb-4">{safeT("tech.h", lang)}</h1>
