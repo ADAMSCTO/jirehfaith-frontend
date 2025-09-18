@@ -3,36 +3,39 @@
 import { useEffect, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
-// Safe translation helper with enhanced fallback and debug logging
+// Manually import translation files to ensure they are loaded
+import en from '@/i18n/en.json';
+import es from '@/i18n/es.json';
+
 const safeT = (key: string, lang: Lang | undefined) => {
   const translation = t(key, lang || "en");
   if (translation === key) {
-    console.warn(`Missing translation for: ${key}`);  // Log to help identify missing translations
-    return `Missing translation for ${key}`;  // Clear fallback message
+    console.warn(`Missing translation for: ${key}`);
+    return `Missing translation for ${key}`;
   }
   return translation;
 };
 
 export default function TechInfoPage() {
+  // Hardcode lang for testing purposes (force it to "en")
   const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
-    preloadCurrentLang(); // Move preloadCurrentLang first
+    preloadCurrentLang(); // Load current language first
     const current = getLang();
-    console.log('Current language:', current);  // Log the current language to the console
-    setLangState(current);
-    const unsub = onLangChange((l) => setLangState(l));
-    return () => unsub();
+    console.log('Current language:', current);  // Log the current language
+    setLangState(current);  // Set lang state to current language
+    const unsub = onLangChange((l) => setLangState(l));  // Listen for language changes
+    return () => unsub();  // Cleanup on unmount
   }, []);
 
-  // Log the result of t() for tech.h and tech.p before returning the JSX
-  console.log('Current lang value:', lang);  // Log the value of lang before calling t()
-  console.log('Translation for tech.h:', t("tech.h", lang));  // Log translation result for tech.h
-  console.log('Translation for tech.p:', t("tech.p", lang));  // Log translation result for tech.p
+  // Log translation output directly for tech.h and tech.p
+  console.log('Current lang value:', lang);
+  console.log('Translation for tech.h:', t("tech.h", lang));  // Check tech.h translation
+  console.log('Translation for tech.p:', t("tech.p", lang));  // Check tech.p translation
 
   return (
     <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
-      {/* Log results for tech.h and tech.p before rendering */}
       <h1 className="text-3xl font-bold mb-4">{t("tech.h", lang)}</h1>
       <p>{t("tech.p", lang)}</p>
 
