@@ -3,10 +3,14 @@
 import { useEffect, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
-// Safe translation helper with fallback
+// Safe translation helper with enhanced fallback and debug logging
 const safeT = (key: string, lang: Lang | undefined) => {
   const translation = t(key, lang || "en");
-  return translation === key ? `Missing translation for ${key}` : translation; // Fallback message for missing translations
+  if (translation === key) {
+    console.warn(`Missing translation for: ${key}`);  // Log to help identify missing translations
+    return `Missing translation for ${key}`;  // Clear fallback message
+  }
+  return translation;
 };
 
 export default function TechInfoPage() {
@@ -15,6 +19,7 @@ export default function TechInfoPage() {
   useEffect(() => {
     preloadCurrentLang(); // Move preloadCurrentLang first
     const current = getLang();
+    console.log('Current language:', current);  // Log the current language to the console
     setLangState(current);
     const unsub = onLangChange((l) => setLangState(l));
     return () => unsub();
