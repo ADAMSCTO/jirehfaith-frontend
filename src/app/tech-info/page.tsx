@@ -32,11 +32,13 @@ export default function TechInfoPage() {
 
   return (
     <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
-      {/* Translated "Tech Info" header */}
+      {/* Hardcoded translations for testing */}
       <h1 className="text-3xl font-bold mb-4" style={{ color: "var(--brand-gold)" }}>
-        {t("tech.h", lang)}  {/* Dynamically load the translation for "Tech Info" */}
+        Tech Info  {/* Hardcoded translation */}
       </h1>
-      <p>{t("tech.p", lang)}</p>  {/* Dynamically load the translation for the paragraph */}
+      <p>
+        This page provides information about the technology that powers JirehFaith. {/* Hardcoded translation */}
+      </p>
 
       <h2 className="text-2xl font-semibold mt-6" style={{ color: "var(--brand-gold)" }}>
         Response Metrics
