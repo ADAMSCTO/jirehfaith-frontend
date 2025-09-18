@@ -47,6 +47,7 @@ function normalizeSections(data: any) {
   }
   return [];
 }
+
 function Toast({ show, children }: { show: boolean; children: ReactNode }) {
   return (
     <div
@@ -75,6 +76,7 @@ export default function Home() {
   const [topic, setTopic] = useState<string>("comfort");
   const [verse, setVerse] = useState<Verse | null>(null);
   const [clearNonce, setClearNonce] = useState(0);
+
   // Keep page language in sync with global i18n (controlled by Header selector)
   useEffect(() => {
     try { preloadCurrentLang(); } catch {}
@@ -85,45 +87,26 @@ export default function Home() {
       try { if (typeof unsub === "function") unsub(); } catch {}
     };
   }, []);
-  const compose = useMutation({
-  mutationFn: async (input: TComposeRequest) => {
-    const startedAt = Date.now();
-    const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
-    const elapsed = Date.now() - startedAt;
-    try {
-      localStorage.setItem("jf:lastResponseMs", String(elapsed));
-      localStorage.setItem("jf:lastResponseAt", new Date().toISOString());
-    } catch {}
-    return data;
-  },
-  onSuccess: () => {
-    try {
-      document
-        .getElementById("prayer-output")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } catch {}
-  },
-});
 
   const compose = useMutation({
-  mutationFn: async (input: TComposeRequest) => {
-    const startedAt = Date.now();
-    const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
-    const elapsed = Date.now() - startedAt;
-    try {
-      localStorage.setItem("jf:lastResponseMs", String(elapsed));
-      localStorage.setItem("jf:lastResponseAt", new Date().toISOString());
-    } catch {}
-    return data;
-  },
-  onSuccess: () => {
-    try {
-      document
-        .getElementById("prayer-output")
-        ?.scrollIntoView({ behavior: "smooth", block: "start" });
-    } catch {}
-  },
-});
+    mutationFn: async (input: TComposeRequest) => {
+      const startedAt = Date.now();
+      const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
+      const elapsed = Date.now() - startedAt;
+      try {
+        localStorage.setItem("jf:lastResponseMs", String(elapsed));
+        localStorage.setItem("jf:lastResponseAt", new Date().toISOString());
+      } catch {}
+      return data;
+    },
+    onSuccess: () => {
+      try {
+        document
+          .getElementById("prayer-output")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch {}
+    },
+  });
 
   const sections = normalizeSections(compose.data);
   const prayerBase =
@@ -135,9 +118,9 @@ export default function Home() {
   const topics = getTopics();
   const hasPrayer = sections.length > 0;
   const hasOutput = hasPrayer || !!verse;
- 
+
   return (
-        <main
+    <main
       id="page-top"
       className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
       onKeyDown={(e) => {
@@ -155,9 +138,8 @@ export default function Home() {
           className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
           style={{ color: "var(--brand-gold)" }}
         >
-
           {/* Left icon (praying hands, gold-outline) */}
-                              <img
+          <img
             src="/icons/praying-hands-gold.png"
             alt=""
             aria-hidden="true"
@@ -168,95 +150,100 @@ export default function Home() {
           Prayer Composer with The Holy Bible Scriptures
 
           {/* Right icon (open Bible, gold-outline) */}
-                              <img
+          <img
             src="/open-bible-gold.png"
             alt=""
             aria-hidden="true"
             className="h-8 w-8"
           />
-
         </h1>
       </header>
 
       <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
         {/* LEFT: form */}
         <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
-                    <div
+          <div
             className="flex-1 min-h-0 space-y-3"
-onKeyDown={(e) => {
-  if (e.key === "Enter" && !compose.isPending) {
-    e.preventDefault();
-    compose.mutate({
-      emotion,
-      language: lang,
-      pronoun_style: pronoun,
-      person_name: personName ? toTitleCase(personName) : undefined,
-      situation: normalizeSituation(situation) || undefined,
-      show_anchor: showAnchor,
-    });
-  }
-}}
->
-  {/* Scripture topic + selector */}
-  <div>
-    <label htmlFor="topic" className="block text-sm font-medium mb-1">
-      Scripture topic
-    </label>
-    <div className="flex items-center gap-2 flex-wrap w-full">
-      <select
-        id="topic"
-        name="topic"
-        aria-label="Scripture topic"
-        autoComplete="off"
-        className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-        value={topic}
-        onChange={(e) => setTopic(e.target.value)}
-        disabled={compose.isPending}
-        aria-disabled={compose.isPending ? true : undefined}
-      >
-        {topics.map((t) => (
-          <option key={t} value={t}>{t}</option>
-        ))}
-      </select>
-      <button
-        type="button"
-        className="inline-flex items-center justify-center rounded-lg bg-black text-white px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-        onClick={() => {
-         setVerse(getNextNonRepeatingVerse(topic));
-         setTimeout(() => {
-          document.getElementById("prayer-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
-         }, 0);
-        }}
-        disabled={compose.isPending}
-        aria-disabled={compose.isPending ? true : undefined}
-        title="Show a verse for the selected topic"
-      >
-        Show verse
-      </button>
-<button
-  type="button"
-  className="inline-flex items-center justify-center rounded-lg bg-white text-black border px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-  onClick={() => {
-  setVerse(null);
-  setTimeout(() => {
-    document.getElementById("prayer-output")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, 0);
-}}
-  disabled={!verse}
-  aria-disabled={!verse ? true : undefined}
-  title="Clear the displayed verse"
->
-  Clear verse
-</button>
-    </div>
-  </div>
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !compose.isPending) {
+                e.preventDefault();
+                compose.mutate({
+                  emotion,
+                  language: lang,
+                  pronoun_style: pronoun,
+                  person_name: personName ? toTitleCase(personName) : undefined,
+                  situation: normalizeSituation(situation) || undefined,
+                  show_anchor: showAnchor,
+                });
+              }
+            }}
+          >
+            {/* Scripture topic + selector */}
+            <div>
+              <label htmlFor="topic" className="block text-sm font-medium mb-1">
+                Scripture topic
+              </label>
+              <div className="flex items-center gap-2 flex-wrap w-full">
+                <select
+                  id="topic"
+                  name="topic"
+                  aria-label="Scripture topic"
+                  autoComplete="off"
+                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                >
+                  {topics.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-lg bg-black text-white px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  onClick={() => {
+                    setVerse(getNextNonRepeatingVerse(topic));
+                    setTimeout(() => {
+                      document.getElementById("prayer-output")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }, 0);
+                  }}
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                  title="Show a verse for the selected topic"
+                >
+                  Show verse
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-lg bg-white text-black border px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  onClick={() => {
+                    setVerse(null);
+                    setTimeout(() => {
+                      document.getElementById("prayer-output")?.scrollIntoView({
+                        behavior: "smooth",
+                        block: "start",
+                      });
+                    }, 0);
+                  }}
+                  disabled={!verse}
+                  aria-disabled={!verse ? true : undefined}
+                  title="Clear the displayed verse"
+                >
+                  Clear verse
+                </button>
+              </div>
+            </div>
 
             {/* Emotion */}
             <div>
               <label htmlFor="emotion" className="block text-sm font-medium mb-1">
                 Emotion
               </label>
-                            <select
+              <select
                 id="emotion"
                 name="emotion"
                 aria-label="Emotion"
@@ -283,7 +270,7 @@ onKeyDown={(e) => {
               <label htmlFor="pronoun-style" className="block text-sm font-medium mb-1">
                 Pronoun style
               </label>
-                            <select
+              <select
                 id="pronoun-style"
                 name="pronoun_style"
                 aria-label="Pronoun style"
@@ -309,7 +296,7 @@ onKeyDown={(e) => {
               <label htmlFor="person-name" className="block text-sm font-medium mb-1">
                 Person name (optional)
               </label>
-                            <input
+              <input
                 id="person-name"
                 name="person_name"
                 type="text"
@@ -329,7 +316,7 @@ onKeyDown={(e) => {
               <label htmlFor="situation" className="block text-sm font-medium mb-1">
                 Situation (optional)
               </label>
-                            <input
+              <input
                 id="situation"
                 name="situation"
                 type="text"
@@ -347,7 +334,7 @@ onKeyDown={(e) => {
             {/* Toggle + Compose row */}
             <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                                <input
+                <input
                   id="show-anchor"
                   name="show_anchor"
                   type="checkbox"
@@ -361,7 +348,7 @@ onKeyDown={(e) => {
                 </label>
               </div>
 
-                            <button
+              <button
                 aria-label="Compose prayer"
                 title="Compose prayer"
                 className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
@@ -415,15 +402,21 @@ onKeyDown={(e) => {
           </div>
 
           {/* Content area */}
-          <div id="prayer-output" key={clearNonce} className="flex-1 min-h-0 space-y-4" aria-live="polite" aria-busy={compose.isPending ? true : undefined}>
-{/* Scripture display (if selected) */}
-{verse && (
-  <div className="rounded-md bg-[var(--header)]/20 border p-2">
-    <div className="text-sm font-medium">Scripture</div>
-    <div className="text-sm italic whitespace-pre-wrap">{verse.text}</div>
-    <div className="text-xs mt-1">{verse.reference} ({verse.version})</div>
-  </div>
-)}
+          <div
+            id="prayer-output"
+            key={clearNonce}
+            className="flex-1 min-h-0 space-y-4"
+            aria-live="polite"
+            aria-busy={compose.isPending ? true : undefined}
+          >
+            {/* Scripture display (if selected) */}
+            {verse && (
+              <div className="rounded-md bg-[var(--header)]/20 border p-2">
+                <div className="text-sm font-medium">Scripture</div>
+                <div className="text-sm italic whitespace-pre-wrap">{verse.text}</div>
+                <div className="text-xs mt-1">{verse.reference} ({verse.version})</div>
+              </div>
+            )}
 
             {(!compose.data || sections.length === 0) && (
               <p className="text-gray-500 text-sm">No prayer yet.</p>
@@ -449,14 +442,13 @@ onKeyDown={(e) => {
                 )}
 
                 <div className="mt-3 text-xs text-gray-500 italic">{ATTRIBUTION}</div>
-                
               </>
             )}
           </div>
 
           {/* Footer with Copy button (always rendered, disabled until content exists) */}
           <div className="mt-4 pt-2 border-t">
-                        <button
+            <button
               aria-label="Copy full prayer"
               title="Copy full prayer"
               className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
@@ -473,20 +465,20 @@ onKeyDown={(e) => {
             >
               {copied ? "Copied!" : "Copy"}
             </button>
-<button
-  aria-label="Clear prayer output"
-  title="Clear prayer output"
-  className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-  onClick={() => {
-    setVerse(null);
-    compose.reset();
-    setClearNonce((n) => n + 1);
-  }}
-  disabled={!hasOutput}
-  aria-disabled={!hasOutput ? true : undefined}
->
-  Clear
-</button>
+            <button
+              aria-label="Clear prayer output"
+              title="Clear prayer output"
+              className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+              onClick={() => {
+                setVerse(null);
+                compose.reset();
+                setClearNonce((n) => n + 1);
+              }}
+              disabled={!hasOutput}
+              aria-disabled={!hasOutput ? true : undefined}
+            >
+              Clear
+            </button>
 
             {/* Screen-reader live region for copy feedback; Toast will replace this visually in Phase 3 */}
             <div id="copy-status" role="status" aria-live="polite" className="sr-only">
@@ -495,7 +487,9 @@ onKeyDown={(e) => {
           </div>
         </section>
       </div>
-          <Toast show={copied}>Copied to clipboard</Toast>
+      <Toast show={copied}>Copied to clipboard</Toast>
     </main>
   );
 }
+
+               
