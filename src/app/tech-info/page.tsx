@@ -3,8 +3,11 @@
 import { useEffect, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
-// Minimal safeT helper for fallback
-const safeT = (key: string, lang: Lang | undefined) => t(key, lang || "en") || key;
+// Safe translation helper with fallback
+const safeT = (key: string, lang: Lang | undefined) => {
+  const translation = t(key, lang || "en");
+  return translation === key ? `Missing translation for ${key}` : translation; // Fallback message for missing translations
+};
 
 export default function TechInfoPage() {
   const [lang, setLangState] = useState<Lang>("en");
