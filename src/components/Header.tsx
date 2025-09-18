@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { getLang, setLang, onLangChange, type Lang, preloadCurrentLang, t } from "@/lib/i18n";
+import Link from "next/link"; // Import Link from Next.js
 
 export default function Header() {
   const tt = (key: string, fallback: string) => {
@@ -28,13 +29,12 @@ export default function Header() {
   return (
     <header className="w-full sticky top-0 z-10 bg-[var(--header)] backdrop-blur border-b border-black/10">
       <div className="mx-auto max-w-5xl px-4 py-1 flex flex-col items-center justify-center gap-3">
-                {/* Center title / logo block */}
-        <a
+        {/* Center title / logo block */}
+        <Link
           href="/"
           aria-label="Go to Home"
           title="Home"
           className="flex flex-col items-center text-center flex-grow leading-tight w-full order-2 md:order-none focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] cursor-pointer"
-          role="link"
         >
           <div className="text-3xl" style={{ color: "var(--brand-gold)" }}>
             🔥
@@ -45,42 +45,39 @@ export default function Header() {
           <div className="text-base italic" style={{ color: "var(--brand-gold)" }}>
             When life speaks, let God’s Word answer.
           </div>
-        </a>
+        </Link>
 
         {/* Nav buttons — centered under logo */}
         <nav className="flex items-center gap-3 text-sm flex-wrap order-3 md:order-none justify-center w-full md:w-auto">
-                    {/* HOME */}
-          <a
+          {/* HOME */}
+          <Link
             href="/"
             aria-label="Home"
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
-            role="link"
           >
             🔥 {tt("nav.home", "Home")}
-          </a>
+          </Link>
 
           {/* DONATE */}
-          <a
+          <Link
             href="/donate"
             aria-label="Donate"
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
-            role="link"
           >
             ❤️ {tt("nav.donate", "Donate")}
-          </a>
+          </Link>
 
-                    {/* ABOUT */}
-          <a
+          {/* ABOUT */}
+          <Link
             href="/about"
             aria-label="About"
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
-            role="link"
           >
             ✝️ {tt("nav.about", "About")}
-          </a>
+          </Link>
 
           {/* Language Selector */}
           <select
