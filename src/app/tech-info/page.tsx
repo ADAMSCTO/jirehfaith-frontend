@@ -32,8 +32,9 @@ export default function TechInfoPage() {
 
   return (
     <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
-      <h1 className="text-3xl font-bold mb-4">{safeT("tech.h", lang)}</h1>
-      <p>{safeT("tech.p", lang)}</p>
+      {/* Log results for tech.h and tech.p before rendering */}
+      <h1 className="text-3xl font-bold mb-4">{t("tech.h", lang)}</h1>
+      <p>{t("tech.p", lang)}</p>
 
       <h2 className="text-2xl font-semibold mt-6" style={{ color: "var(--brand-gold)" }}>
         Response Metrics
