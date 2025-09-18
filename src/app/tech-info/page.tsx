@@ -3,21 +3,24 @@
 import { useEffect, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
+// Minimal safeT helper for fallback
+const safeT = (key: string, lang: string) => t(key, lang) || key;
+
 export default function TechInfoPage() {
   const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
+    preloadCurrentLang(); // Move preloadCurrentLang first
     const current = getLang();
     setLangState(current);
-    preloadCurrentLang();
     const unsub = onLangChange((l) => setLangState(l));
     return () => unsub();
   }, []);
 
   return (
     <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
-      <h1 className="text-3xl font-bold mb-4">{t("tech.h", lang)}</h1>
-      <p>{t("tech.p", lang)}</p>
+      <h1 className="text-3xl font-bold mb-4">{safeT("tech.h", lang)}</h1>
+      <p>{safeT("tech.p", lang)}</p>
 
       <h2 className="text-2xl font-semibold mt-6" style={{ color: "var(--brand-gold)" }}>
         Response Metrics
