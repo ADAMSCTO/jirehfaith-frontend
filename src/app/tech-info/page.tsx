@@ -26,6 +26,7 @@ export default function TechInfoPage() {
   }, []);
 
   // Log the result of t() for tech.h and tech.p before returning the JSX
+  console.log('Current lang value:', lang);  // Log the value of lang before calling t()
   console.log('Translation for tech.h:', t("tech.h", lang));  // Log translation result for tech.h
   console.log('Translation for tech.p:', t("tech.p", lang));  // Log translation result for tech.p
 
