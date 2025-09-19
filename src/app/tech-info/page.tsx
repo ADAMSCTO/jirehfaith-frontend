@@ -17,12 +17,12 @@ export default function TechInfoPage() {
   const [lang, setLangState] = useState<Lang>("en");
 
   useEffect(() => {
-    preloadCurrentLang(); // Move preloadCurrentLang first
-    const current = getLang();
-    console.log('Current language:', current);  // Log the current language
+    preloadCurrentLang(); // Preload translation files first
+    const current = getLang(); // Get current language
+    console.log('Current language:', current);  // Log the current language for debugging
     setLangState(current);
-    const unsub = onLangChange((l) => setLangState(l));
-    return () => unsub();
+    const unsub = onLangChange((l) => setLangState(l)); // Update language state on language change
+    return () => unsub(); // Cleanup on unmount
   }, []);
 
   // Log translation output directly for tech.h and tech.p before rendering
@@ -32,13 +32,11 @@ export default function TechInfoPage() {
 
   return (
     <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
-      {/* Hardcoded translations for testing */}
+      {/* Translations for tech.h and tech.p */}
       <h1 className="text-3xl font-bold mb-4" style={{ color: "var(--brand-gold)" }}>
-        Tech Info  {/* Hardcoded translation */}
+        {safeT("tech.h", lang)}  {/* Dynamically translated "Tech Info" */}
       </h1>
-      <p>
-        This page provides information about the technology that powers JirehFaith. {/* Hardcoded translation */}
-      </p>
+      <p>{safeT("tech.p", lang)}</p>  {/* Dynamically translated paragraph */}
 
       <h2 className="text-2xl font-semibold mt-6" style={{ color: "var(--brand-gold)" }}>
         Response Metrics
