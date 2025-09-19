@@ -7,38 +7,32 @@ import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i
 const safeT = (key: string, lang: Lang | undefined) => {
   const translation = t(key, lang || "en");
   if (translation === key) {
-    console.warn(`Missing translation for: ${key}`);  // Log to help identify missing translations
-    return `Missing translation for ${key}`;  // Clear fallback message
+    console.warn(`Missing translation for: ${key}`);
+    return `Missing translation for ${key}`;  // Fallback message
   }
   return translation;
 };
 
 export default function TechInfoPage() {
   const [lang, setLangState] = useState<Lang>("en");
-  const [loading, setLoading] = useState(true);  // Add loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadTranslations = async () => {
       await preloadCurrentLang();  // Preload translations
       const current = getLang();   // Get current language
       setLangState(current);       // Set language state
-      setLoading(false);           // Set loading to false once translations are ready
+      setLoading(false);           // Once translations are ready, stop loading
     };
 
     loadTranslations();
 
-    const unsub = onLangChange((l) => setLangState(l));  // Update language state on language change
+    const unsub = onLangChange((l) => setLangState(l));  // Update language on change
     return () => unsub(); // Cleanup on unmount
   }, []);
 
-  // Log translation output directly for tech.h and tech.p before rendering
-  console.log('Current lang value:', lang);
-  console.log('Translation for tech.h:', t("tech.h", lang));  // Check tech.h translation
-  console.log('Translation for tech.p:', t("tech.p", lang));  // Check tech.p translation
-
-  // Render a loading spinner or placeholder while translations are loading
   if (loading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>; // Show loading while translations load
   }
 
   return (
