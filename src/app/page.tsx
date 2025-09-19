@@ -1,17 +1,69 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
+import type { ReactNode } from "react";
+import { useMutation } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
+import { getTopics, getNextNonRepeatingVerse, type Verse } from "@/lib/verses";
+import { getLang, onLangChange, preloadCurrentLang, type Lang } from "@/lib/i18n";
 
-// Safe translation helper with enhanced fallback and debug logging
-const safeT = (key: string, lang: Lang | undefined) => {
-  const translation = t(key, lang || "en");
-  if (translation === key) {
-    console.warn(`Missing translation for: ${key}`);  // Log to help identify missing translations
-    return `Missing translation for ${key}`;  // Clear fallback message
+const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
+const ATTRIBUTION = `— Source: ${SITE_NAME} (${SITE_URL})`;
+
+// Normalize various possible response shapes into an array of {title, content}
+function prettyTitle(title: string) {
+  const key = String(title || "").replace(/_/g, " ").trim();
+  if (key.toLowerCase() === "yielding listening" || key.toLowerCase() === "yielding_listening") {
+    return "Yielding / Listening";
   }
-  return translation;
-};
+  return key.replace(/\b\w/g, (ch) => ch.toUpperCase());
+}
+
+function toTitleCase(name: string) {
+  return String(name || "")
+    .trim()
+    .replace(/\b\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
+}
+
+function normalizeSituation(s: string) {
+  const cleaned = String(s || "").trim().replace(/\s+/g, " ");
+  if (!cleaned) return "";
+  return cleaned[0].toUpperCase() + cleaned.slice(1);
+}
+
+function normalizeSections(data: any) {
+  const raw = (data as any)?.sections ?? (data as any)?.output ?? data;
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === "object") {
+    return Object.entries(raw).map(([title, content]) => ({
+      title,
+      content: String(content ?? ""),
+    }));
+  }
+  if (typeof raw === "string") {
+    return [{ title: "Prayer", content: raw }];
+  }
+  return [];
+}
+
+function Toast({ show, children }: { show: boolean; children: ReactNode }) {
+  return (
+    <div
+      aria-live="polite"
+      role="status"
+      aria-atomic="true"
+      className={`pointer-events-none fixed bottom-4 right-4 transition-opacity duration-200 ${
+        show ? "opacity-100" : "opacity-0"
+      }`}
+    >
+      <div className="pointer-events-auto rounded-md bg-black/85 text-white text-sm px-3 py-2 shadow-lg">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
@@ -439,5 +491,3 @@ export default function Home() {
     </main>
   );
 }
-
-               
