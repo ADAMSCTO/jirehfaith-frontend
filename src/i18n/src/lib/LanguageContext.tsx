@@ -11,7 +11,7 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
   const [lang, setLang] = useState<string>("en");
   const router = useRouter(); // Get router instance
 
-  // Force translation reload when language changes or page is navigated
+  // Force translation reload on page load
   useEffect(() => {
     const loadTranslations = async () => {
       try {
@@ -23,18 +23,20 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
       }
     };
 
-    loadTranslations();
+    loadTranslations(); // Reload translations on initial load
 
+    // Subscribe to language changes
     const unsub = onLangChange((newLang) => {
       setLang(newLang);
-      loadTranslations();  // Reload translations when language changes
+      loadTranslations(); // Reload translations when language changes
     });
 
     // Listen for route changes to reload translations when navigating
     const handleRouteChange = () => {
-      loadTranslations(); // Reload translations when a route changes
+      loadTranslations(); // Force reload translations on route change
     };
 
+    // Set up route change listener
     router.events.on("routeChangeStart", handleRouteChange);
 
     // Cleanup event listeners on unmount
