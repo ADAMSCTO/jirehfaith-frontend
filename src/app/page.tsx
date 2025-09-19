@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { ReactNode } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
 import { getTopics, getNextNonRepeatingVerse, type Verse } from "@/lib/verses";
 import { getLang, onLangChange, preloadCurrentLang, type Lang } from "@/lib/i18n";
-import { LanguageProvider } from "@/lib/LanguageContext"; // Import the LanguageProvider
+import { LanguageProvider } from "@/lib/LanguageContext";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
@@ -49,23 +48,6 @@ function normalizeSections(data: any) {
   return [];
 }
 
-function Toast({ show, children }: { show: boolean; children: ReactNode }) {
-  return (
-    <div
-      aria-live="polite"
-      role="status"
-      aria-atomic="true"
-      className={`pointer-events-none fixed bottom-4 right-4 transition-opacity duration-200 ${
-        show ? "opacity-100" : "opacity-0"
-      }`}
-    >
-      <div className="pointer-events-auto rounded-md bg-black/85 text-white text-sm px-3 py-2 shadow-lg">
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
   const [pronoun, setPronoun] = useState<TComposeRequest["pronoun_style"]>("we");
@@ -80,12 +62,16 @@ export default function Home() {
 
   // Keep page language in sync with global i18n (controlled by Header selector)
   useEffect(() => {
-    try { preloadCurrentLang(); } catch {}
+    try {
+      preloadCurrentLang();
+    } catch {}
     const current = getLang();
     setLang(current as "en" | "es" | "fr" | "pt");
     const unsub = onLangChange((l: Lang) => setLang(l as "en" | "es" | "fr" | "pt"));
     return () => {
-      try { if (typeof unsub === "function") unsub(); } catch {}
+      try {
+        if (typeof unsub === "function") unsub();
+      } catch {}
     };
   }, []);
 
@@ -121,7 +107,7 @@ export default function Home() {
   const hasOutput = hasPrayer || !!verse;
 
   return (
-    <LanguageProvider> {/* Wrap the app with LanguageProvider */}
+    <LanguageProvider>
       <main
         id="page-top"
         className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
@@ -157,7 +143,340 @@ export default function Home() {
         </header>
 
         <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
-          {/* Content... */}
+          {/* LEFT: form */}
+          <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
+            <div
+              className="flex-1 min-h-0 space-y-3"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !compose.isPending) {
+                  e.preventDefault();
+                  compose.mutate({
+                    emotion,
+                    language: lang,
+                    pronoun_style: pronoun,
+                    person_name: personName ? toTitleCase(personName) : undefined,
+                    situation: normalizeSituation(situation) || undefined,
+                    show_anchor: showAnchor,
+                  });
+                }
+              }}
+            >
+              {/* Scripture topic + selector */}
+              <div>
+                <label htmlFor="topic" className="block text-sm font-medium mb-1">
+                  Scripture topic
+                </label>
+                <div className="flex items-center gap-2 flex-wrap w-full">
+                  <select
+                    id="topic"
+                    name="topic"
+                    aria-label="Scripture topic"
+                    autoComplete="off"
+                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                    disabled={compose.isPending}
+                    aria-disabled={compose.isPending ? true : undefined}
+                  >
+                    {topics.map((t) => (
+                      <option key={t} value={t}>
+                        {t}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-lg bg-black text-white px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                    onClick={() => {
+                      setVerse(getNextNonRepeatingVerse(topic));
+                      setTimeout(() => {
+                        document.getElementById("prayer-output")?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }, 0);
+                    }}
+                    disabled={compose.isPending}
+                    aria-disabled={compose.isPending ? true : undefined}
+                    title="Show a verse for the selected topic"
+                  >
+                    Show verse
+                  </button>
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center rounded-lg bg-white text-black border px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                    onClick={() => {
+                      setVerse(null);
+                      setTimeout(() => {
+                        document.getElementById("prayer-output")?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        });
+                      }, 0);
+                    }}
+                    disabled={!verse}
+                    aria-disabled={!verse ? true : undefined}
+                    title="Clear verse"
+                  >
+                    Clear verse
+                  </button>
+                </div>
+              </div>
+
+              {/* Emotion */}
+              <div>
+                <label htmlFor="emotion" className="block text-sm font-medium mb-1">
+                  Emotion
+                </label>
+                <select
+                  id="emotion"
+                  name="emotion"
+                  aria-label="Emotion"
+                  autoComplete="off"
+                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  value={emotion}
+                  onChange={(e) => setEmotion(e.target.value)}
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                >
+                  <option value="anxiety">anxiety</option>
+                  <option value="grief">grief</option>
+                  <option value="fear">fear</option>
+                  <option value="anger">anger</option>
+                  <option value="love">love</option>
+                  <option value="perseverance">perseverance</option>
+                  <option value="hope">hope</option>
+                  <option value="joy">joy</option>
+                </select>
+              </div>
+
+              {/* Pronoun style */}
+              <div>
+                <label htmlFor="pronoun-style" className="block text-sm font-medium mb-1">
+                  Pronoun style
+                </label>
+                <select
+                  id="pronoun-style"
+                  name="pronoun_style"
+                  aria-label="Pronoun style"
+                  autoComplete="off"
+                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  value={pronoun}
+                  onChange={(e) => setPronoun(e.target.value as TComposeRequest["pronoun_style"])}
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                >
+                  <option value="i">I / me / my</option>
+                  <option value="we">We / us / our</option>
+                  <option value="he">He / him / his</option>
+                  <option value="she">She / her / her</option>
+                  <option value="they">They / them / their</option>
+                </select>
+              </div>
+
+              {/* Person name */}
+              <div>
+                <label htmlFor="person-name" className="block text-sm font-medium mb-1">
+                  Person name (optional)
+                </label>
+                <input
+                  id="person-name"
+                  name="person_name"
+                  type="text"
+                  aria-label="Person name"
+                  autoComplete="given-name"
+                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  value={personName}
+                  onChange={(e) => setPersonName(e.target.value)}
+                  placeholder="e.g., John"
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                />
+              </div>
+
+              {/* Situation */}
+              <div>
+                <label htmlFor="situation" className="block text-sm font-medium mb-1">
+                  Situation (optional)
+                </label>
+                <input
+                  id="situation"
+                  name="situation"
+                  type="text"
+                  aria-label="Situation"
+                  autoComplete="off"
+                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  value={situation}
+                  onChange={(e) => setSituation(e.target.value)}
+                  placeholder="e.g., upcoming surgery"
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                />
+              </div>
+
+              {/* Toggle + Compose row */}
+              <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <input
+                    id="show-anchor"
+                    name="show_anchor"
+                    type="checkbox"
+                    checked={showAnchor}
+                    onChange={(e) => setShowAnchor(e.target.checked)}
+                    disabled={compose.isPending}
+                    aria-disabled={compose.isPending ? true : undefined}
+                  />
+                  <label htmlFor="show-anchor" className="text-sm">
+                    Show anchor
+                  </label>
+                </div>
+
+                <button
+                  aria-label="Compose prayer"
+                  title="Compose prayer"
+                  className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                  disabled={compose.isPending}
+                  aria-disabled={compose.isPending ? true : undefined}
+                  aria-controls="prayer-output"
+                  aria-busy={compose.isPending ? true : undefined}
+                  onClick={() =>
+                    compose.mutate({
+                      emotion,
+                      language: lang,
+                      pronoun_style: pronoun,
+                      person_name: personName ? toTitleCase(personName) : undefined,
+                      situation: normalizeSituation(situation) || undefined,
+                      show_anchor: showAnchor,
+                    })
+                  }
+                >
+                  {compose.isPending ? (
+                    <>
+                      <svg
+                        className="mr-2 h-4 w-4 animate-spin"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        aria-hidden="true"
+                      >
+                        <circle
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeOpacity="0.25"
+                          strokeWidth="4"
+                        />
+                        <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" />
+                      </svg>
+                      Composing…
+                    </>
+                  ) : (
+                    "Compose prayer"
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {compose.isError && (
+              <p className="text-red-600 text-sm mt-2">
+                Error: {(compose.error as any)?.message || "Unknown error"}
+              </p>
+            )}
+          </section>
+
+          {/* RIGHT: output */}
+          <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] flex flex-col">
+            {/* Non-sticky header */}
+            <div className="mb-3 flex items-center justify-between border-b pb-2">
+              <h2 className="text-xl font-medium">Prayer</h2>
+            </div>
+
+            {/* Content area */}
+            <div
+              id="prayer-output"
+              key={clearNonce}
+              className="flex-1 min-h-0 space-y-4"
+              aria-live="polite"
+              aria-busy={compose.isPending ? true : undefined}
+            >
+              {/* Scripture display (if selected) */}
+              {verse && (
+                <div className="rounded-md bg-[var(--header)]/20 border p-2">
+                  <div className="text-sm font-medium">Scripture</div>
+                  <div className="text-sm italic whitespace-pre-wrap">{verse.text}</div>
+                  <div className="text-xs mt-1">
+                    {verse.reference} ({verse.version})
+                  </div>
+                </div>
+              )}
+
+              {(!compose.data || sections.length === 0) && (
+                <p className="text-gray-500 text-sm">No prayer yet.</p>
+              )}
+
+              {sections.length > 0 && (
+                <>
+                  {sections.map((s: any, idx: number) => (
+                    <div key={idx}>
+                      <div className="font-semibold">{prettyTitle(String(s.title))}</div>
+                      <div className="whitespace-pre-wrap">{s.content}</div>
+                    </div>
+                  ))}
+
+                  {anchor && (
+                    <div className="border-t pt-3 text-sm">
+                      <div className="font-semibold">Anchor</div>
+                      <div className="whitespace-pre-wrap">
+                        {anchor.ref}
+                        {anchor.text ? ` — ${anchor.text}` : ""}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="mt-3 text-xs text-gray-500 italic">{ATTRIBUTION}</div>
+                </>
+              )}
+            </div>
+
+            {/* Footer with Copy button (always rendered, disabled until content exists) */}
+            <div className="mt-4 pt-2 border-t">
+              <button
+                aria-label="Copy full prayer"
+                title="Copy full prayer"
+                className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                disabled={!hasPrayer}
+                aria-controls="prayer-output"
+                aria-describedby="copy-status"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(fullPrayer);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  } catch {}
+                }}
+              >
+                {copied ? "Copied!" : "Copy"}
+              </button>
+              <button
+                aria-label="Clear prayer output"
+                title="Clear prayer output"
+                className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                onClick={() => {
+                  setVerse(null);
+                  compose.reset();
+                  setClearNonce((n) => n + 1);
+                }}
+                disabled={!hasOutput}
+                aria-disabled={!hasOutput ? true : undefined}
+              >
+                Clear
+              </button>
+
+              <div id="copy-status" role="status" aria-live="polite" className="sr-only">
+                {copied ? "Copied to clipboard" : ""}
+              </div>
+            </div>
+          </section>
         </div>
       </main>
     </LanguageProvider>
