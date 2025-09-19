@@ -15,13 +15,19 @@ const safeT = (key: string, lang: Lang | undefined) => {
 
 export default function TechInfoPage() {
   const [lang, setLangState] = useState<Lang>("en");
+  const [loading, setLoading] = useState(true);  // Add loading state
 
   useEffect(() => {
-    preloadCurrentLang(); // Preload translation files first
-    const current = getLang(); // Get current language
-    console.log('Current language:', current);  // Log the current language for debugging
-    setLangState(current);
-    const unsub = onLangChange((l) => setLangState(l)); // Update language state on language change
+    const loadTranslations = async () => {
+      await preloadCurrentLang();  // Preload translations
+      const current = getLang();   // Get current language
+      setLangState(current);       // Set language state
+      setLoading(false);           // Set loading to false once translations are ready
+    };
+
+    loadTranslations();
+
+    const unsub = onLangChange((l) => setLangState(l));  // Update language state on language change
     return () => unsub(); // Cleanup on unmount
   }, []);
 
@@ -29,6 +35,11 @@ export default function TechInfoPage() {
   console.log('Current lang value:', lang);
   console.log('Translation for tech.h:', t("tech.h", lang));  // Check tech.h translation
   console.log('Translation for tech.p:', t("tech.p", lang));  // Check tech.p translation
+
+  // Render a loading spinner or placeholder while translations are loading
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <main className="p-4 max-w-3xl mx-auto prose prose-lg text-white prose-headings:text-[var(--brand-gold)] prose-strong:text-[var(--brand-gold)]">
