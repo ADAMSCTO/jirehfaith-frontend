@@ -13,8 +13,8 @@ export const LanguageProvider = ({ children }: { children: React.ReactNode }) =>
     preloadCurrentLang(); // Preload the translation files
     const currentLang = getLang();
     setLang(currentLang);
-    const unsub = onLangChange((newLang) => setLang(newLang));
-    return () => unsub();
+    const unsub = onLangChange((newLang) => setLang(newLang)); // Listen for language changes
+    return () => unsub(); // Cleanup the subscription
   }, []);
 
   return (
