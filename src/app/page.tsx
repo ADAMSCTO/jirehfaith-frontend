@@ -160,6 +160,6 @@ export default function Home() {
           {/* Content... */}
         </div>
       </main>
-    </LanguageProvider> {/* End of LanguageProvider */}
+    </LanguageProvider>
   );
 }
