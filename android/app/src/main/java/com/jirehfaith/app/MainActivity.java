@@ -1,25 +1,38 @@
 package com.jirehfaith.app;
 
-import com.getcapacitor.BridgeActivity;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.webkit.WebSettings;
+import android.view.View;
+import android.view.Window;
 import android.webkit.WebView;
+
+import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
   @Override
   protected void onCreate(Bundle savedInstanceState) {
+    // Set window/decor backgrounds to royal purple BEFORE super creates the WebView
+    Window w = getWindow();
+    if (w != null) {
+      int purple = Color.parseColor("#6C3BAA");
+      w.setBackgroundDrawable(null);        // remove any drawable that could be dark/black
+      w.getDecorView().setBackgroundColor(purple);
+    }
+
     super.onCreate(savedInstanceState);
 
-    WebView webView = getBridge().getWebView();
-    if (webView != null) {
-      WebSettings settings = webView.getSettings();
-      settings.setTextZoom(100);
-      settings.setUseWideViewPort(false);
-      settings.setLoadWithOverviewMode(false);
-      settings.setSupportZoom(false);
-      settings.setBuiltInZoomControls(false);
-      settings.setDisplayZoomControls(false);
-    }
+    // Ensure the WebView itself starts purple (no white flash before CSS loads)
+    try {
+      WebView webView = getBridge().getWebView();
+      if (webView != null) {
+        int purple = Color.parseColor("#6C3BAA");
+        webView.setBackgroundColor(purple);
+        // Also guard the root view just in case
+        View root = webView.getRootView();
+        if (root != null) {
+          root.setBackgroundColor(purple);
+        }
+      }
+    } catch (Exception ignored) {}
   }
 }
-

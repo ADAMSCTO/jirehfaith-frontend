@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background color (linked to the ic_launcher_background we set in colors.xml) -->
+    <item android:drawable="@color/app_window_background" />
+    <!-- Centered splash image -->
+    <item>
+        <bitmap
+            android:gravity="center"
+            android:src="@mipmap/ic_open_bible_purple" />
+    </item>
+</layer-list>

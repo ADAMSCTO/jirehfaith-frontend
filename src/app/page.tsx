@@ -191,8 +191,8 @@ export default function Home() {
                       setVerse(getNextNonRepeatingVerse(topic));
                       setTimeout(() => {
                         document.getElementById("prayer-output")?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
+                          behavior: 'smooth',
+                          block: 'start',
                         });
                       }, 0);
                     }}
@@ -201,24 +201,6 @@ export default function Home() {
                     title="Show a verse for the selected topic"
                   >
                     Show verse
-                  </button>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-lg bg-white text-black border px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                    onClick={() => {
-                      setVerse(null);
-                      setTimeout(() => {
-                        document.getElementById("prayer-output")?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                      }, 0);
-                    }}
-                    disabled={!verse}
-                    aria-disabled={!verse ? true : undefined}
-                    title="Clear verse"
-                  >
-                    Clear verse
                   </button>
                 </div>
               </div>
@@ -462,9 +444,29 @@ export default function Home() {
                 title="Clear prayer output"
                 className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 onClick={() => {
+                  // Clear both verse and composed output
                   setVerse(null);
                   compose.reset();
                   setClearNonce((n) => n + 1);
+
+                  // Defer + double-pass to defeat WebView timing quirks
+                  const doTop = () => {
+                    try {
+                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+                      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+                      document.body?.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+                    } catch {
+                      window.scrollTo(0, 0);
+                    }
+                    requestAnimationFrame(() => {
+                      try {
+                        window.scrollTo(0, 0);
+                        document.scrollingElement?.scrollTo(0, 0);
+                        document.body?.scrollTo(0, 0);
+                      } catch {}
+                    });
+                  };
+                  setTimeout(doTop, 0);
                 }}
                 disabled={!hasOutput}
                 aria-disabled={!hasOutput ? true : undefined}

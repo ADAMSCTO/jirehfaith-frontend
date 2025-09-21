@@ -128,7 +128,7 @@ export default function AboutPage() {
       <div className="mt-8">
         <a
           id="tech-info-cta"
-          href="/tech-info"
+          href="/tech-info/index.html"
           className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition cursor-pointer"
           aria-label={tt("about.cta.tech")}
           title={tt("about.cta.tech")}

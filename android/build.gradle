@@ -16,28 +16,6 @@ buildscript {
 }
 
 apply from: "variables.gradle"
-// RC10: Force Java 17 across all Android subprojects to avoid "invalid source release: 21"
-subprojects { subproj ->
-    afterEvaluate {
-        if (subproj.plugins.hasPlugin("com.android.application") || subproj.plugins.hasPlugin("com.android.library")) {
-            subproj.android {
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-            }
-        }
-    }
-
-    // If Kotlin is present, align to JVM 17
-    plugins.withId("org.jetbrains.kotlin.android") {
-        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-            kotlinOptions {
-                jvmTarget = "17"
-            }
-        }
-    }
-}
 
 allprojects {
     repositories {

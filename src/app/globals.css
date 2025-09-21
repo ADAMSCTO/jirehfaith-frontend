@@ -17,9 +17,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html, body { background-color: #6C3BAA !important; } /* fallback for initial paint */
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #6C3BAA;
     --foreground: #ededed;
   }
 }
