@@ -1,11 +1,11 @@
 @import "tailwindcss";
 
 :root {
-  --background: #40A8F5; /* JirehFaith brand background (Sky Blue, unified) */
+  --background: #6C3BAA; /* JirehFaith brand background (Royal Purple, unified) */
   --foreground: #171717;
   --brand-gold: #FFD700;
-  --brand-blue: #40A8F5;
-  --header: #40A8F5;
+  --brand-blue: #6C3BAA;
+  --header: #6C3BAA;
   --panel: #FFFFFF;       /* panels (input/output) stay white */
   --text: #000000;        /* body text black for contrast */
 }
@@ -17,9 +17,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
+html, body { background-color: #6C3BAA !important; } /* fallback for initial paint */
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #6C3BAA;
     --foreground: #ededed;
   }
 }
@@ -35,4 +37,80 @@ img {
   max-width: 100%;
   height: auto;
 }
+/* === RC10: Android 7.x WebView compatibility === */
+html {
+  /* prevent unexpected text auto-zoom on older WebView */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
 
+body {
+  /* remove gray tap highlight and improve touch behavior */
+  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  touch-action: manipulation;
+}
+
+/* Center site header/title/tagline reliably */
+header, .site-header, .jf-header {
+  text-align: center;
+  background: var(--header);  /* Apply royal purple background */
+  color: var(--foreground);   /* Ensure text color is readable */
+}
+h1, h2 {
+  margin: 0.25rem 0;
+  line-height: 1.2;
+}
+.tagline, .subtitle {
+  display: block;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+/* Constrain hero imagery (praying hands / open bible) */
+.hero img, img.hero, .hero-icon, .hero .icon {
+  max-width: min(60vw, 320px);
+  height: auto;
+}
+
+/* Keep layout readable on small/older screens */
+.main-content, .container, .page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px;
+}
+
+/* Make buttons reliably tappable */
+a, button {
+  min-height: 44px;
+  padding: 12px 16px;
+}
+/* === RC10 Android WebView normalization (links, headers, icons, panels) === */
+a { text-decoration: none; color: inherit; }
+a:focus, a:hover { text-decoration: none; }
+
+/* Some templates may wrap titles in <u>; neutralize for headers/site title */
+h1 u, h2 u, .site-title u { text-decoration: none; }
+
+/* Strengthen base typography and header sizes on older WebView */
+html, body { font-size: 16px; }
+h1 { font-size: clamp(22px, 5vw, 32px); font-weight: 700; }
+h2 { font-size: clamp(18px, 4vw, 24px); font-weight: 600; }
+
+/* Constrain header imagery/logos */
+header img, .site-header img, .jf-header img { max-height: 48px; width: auto; }
+
+/* Ensure SVGs scale sanely like IMG */
+img, svg { max-width: 100%; height: auto; }
+
+/* Explicit cap for “praying hands / open bible” hero */
+.hero-icon { max-width: min(50vw, 240px); height: auto; }
+
+/* Make sure panels are visible and readable */
+.panel, .composer-panel, .output-panel {
+  background: var(--panel);
+  color: var(--text);
+  display: block;
+}
+
+/* Touch targets stay clickable (guards against accidental overlay styles) */
+button, .btn, [role="button"] { pointer-events: auto; }

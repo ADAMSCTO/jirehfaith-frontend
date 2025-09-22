@@ -1,35 +1,46 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { PAYMENT_LINKS } from "@/lib/payments";
+import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
 type Btn = {
   key: "stripe" | "paypal" | "applepay" | "googlepay";
-  label: string;
 };
 
 const BUTTONS: Btn[] = [
-  { key: "stripe", label: "Donate with Stripe" },
-  { key: "paypal", label: "Donate with PayPal" },
-  { key: "applepay", label: "Donate with Apple Pay" },
-  { key: "googlepay", label: "Donate with Google Pay" },
+  { key: "stripe" },
+  { key: "paypal" },
+  { key: "applepay" },
+  { key: "googlepay" }
 ];
 
 export default function DonatePage() {
+  const [lang, setLangState] = useState<Lang>("en");
+
+  useEffect(() => {
+    const current = getLang();
+    setLangState(current);
+    preloadCurrentLang();
+    const unsub = onLangChange((l) => setLangState(l));
+    return () => unsub();
+  }, []);
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 text-white">
       <h1
         className="text-3xl font-bold mb-3"
         style={{ color: "var(--brand-gold)" }}
       >
-        Support JirehFaith
+        {t("donate.title", lang)}
       </h1>
+
       <p className="text-base mb-6">
-        Choose a provider below to make a donation. Thank you for fueling this
-        ministry.
+        {t("donate.lead", lang)}
       </p>
 
-            <div className="grid gap-3">
-        {BUTTONS.map(({ key, label }) => {
+      <div className="grid gap-3">
+        {BUTTONS.map(({ key }) => {
           const raw = PAYMENT_LINKS[key];
           const enabled = raw && raw !== "#";
           const href = enabled ? raw : undefined;
@@ -46,17 +57,17 @@ export default function DonatePage() {
               }
               target={enabled ? "_blank" : undefined}
               rel={enabled ? "noopener noreferrer" : undefined}
-              title={enabled ? undefined : "This method isn’t available yet."}
+              title={enabled ? undefined : t("donate.note", lang)}
             >
-              {label}
-              {!enabled ? " (coming soon)" : ""}
+              {t(`donate.${key}`, lang)}
+              {!enabled ? " " + t("donate.comingSoon", lang) : ""}
             </a>
           );
         })}
       </div>
 
       <p className="text-xs mt-4 opacity-80">
-        If a button is disabled, that method isn’t available yet.
+        {t("donate.note", lang)}
       </p>
     </main>
   );
