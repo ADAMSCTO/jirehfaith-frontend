@@ -31,8 +31,9 @@ export default function TechInfoPage() {
     return () => unsub(); // Cleanup on unmount
   }, []);
 
-  if (loading) {
-    return <div>Loading...</div>; // Show loading while translations load
+    if (loading) {
+    // Avoid visual flash; let content render when ready
+    return null;
   }
 
   return (
