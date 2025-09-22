@@ -229,6 +229,10 @@ export default function Home() {
                   <option value="perseverance">perseverance</option>
                   <option value="hope">hope</option>
                   <option value="joy">joy</option>
+                  <option value="financial_trials">financial trials</option>
+                  <option value="relationship_trials">relationship trials</option>
+                  <option value="illness">illness</option>
+                  <option value="despair">despair</option>
                 </select>
               </div>
 
