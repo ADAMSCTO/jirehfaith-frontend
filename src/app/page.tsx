@@ -238,7 +238,7 @@ export default function Home() {
           </h1>
         </header>
 
-        <div className="grid gap-3 md:h/full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
+        <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
           {/* LEFT: form */}
           <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
             <div className="flex-1 min-h-0 space-y-3">
