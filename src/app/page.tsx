@@ -5,7 +5,6 @@ import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
-// 🔻 Removed all verse/helpers imports
 import { getLang, onLangChange, preloadCurrentLang, type Lang } from "@/lib/i18n";
 import { LanguageProvider } from "@/lib/LanguageContext";
 
@@ -18,14 +17,8 @@ function prettyTitle(title: string) {
   const key = String(title || "").replace(/_/g, " ").trim();
   if (key.toLowerCase() === "yielding listening" || key.toLowerCase() === "yielding_listening") {
     return "Yielding / Listening";
-    }
+  }
   return key.replace(/\b\w/g, (ch) => ch.toUpperCase());
-}
-
-function toTitleCase(name: string) {
-  return String(name || "")
-    .trim()
-    .replace(/\b\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }
 
 /** Normalize backend sections to an array */
@@ -52,18 +45,25 @@ function normalizeSections(data: any) {
   return [];
 }
 
-/** Personalization cue: bold the parenthetical where users speak their situation/condition. */
+/**
+ * Emphasize the parenthetical where users speak their situation/condition:
+ *  - EN: (state your condition)
+ *  - ES: (declara tu condición)
+ *  - FR: (exprimez votre situation)
+ *  - PT: (diga a sua condição)
+ * Also tolerant of variants: situation/situación/situação, condición/condição, condition.
+ */
 function emphasizePersonalCueInline(s: string) {
   const safe = String(s ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
   const pattern =
-    /\(([^)]*(?:situation|situ[aã]|situación|situação|condi[cç][aã]o)[^)]*)\)/giu;
+    /\(([^)]*(?:state your condition|condition|condici[oó]n|condi[cç][aã]o|situ[aã]?[cç][aã]o|situaci[oó]n|situ[aã]o|situation)[^)]*)\)/giu;
   return safe.replace(pattern, (_m, inner) => `<strong>(${inner})</strong>`);
 }
 
-/** Stopgap list + hydration (Mission 1) */
+/** Stopgap list + hydration (from Mission 1) */
 const STOPGAP_EMOTIONS = [
   "anxiety",
   "grief",
@@ -87,16 +87,12 @@ export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
   const [emotionOptions, setEmotionOptions] = useState<string[]>(STOPGAP_EMOTIONS);
 
-  const [pronoun, setPronoun] = useState<TComposeRequest["pronoun_style"]>("we");
-  const [personName, setPersonName] = useState("");
-  const [situation, setSituation] = useState(""); // kept in UI for now, but NEVER sent
-  const [showAnchor, setShowAnchor] = useState(true);
+  // 🔻 Removed pronoun/person/situation/showAnchor; lean ACTS-Y only
   const [copied, setCopied] = useState(false);
   const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
-  // 🔻 Removed topic + verse + Verse type
   const [clearNonce, setClearNonce] = useState(0);
 
-  // Keep page language in sync with global i18n (controlled by Header selector)
+  // Keep page language in sync with global i18n (Header selector)
   useEffect(() => {
     try {
       preloadCurrentLang();
@@ -137,8 +133,8 @@ export default function Home() {
   }, []);
 
   /** Compose client
-   *  IMPORTANT: Do NOT send "situation" (Mission 1 guardrail)
-   *  Ensure utf-8 content-type
+   *  IMPORTANT: Pure ACTS-Y — do not send pronoun/person/situation.
+   *  Keep anchor visible; request it explicitly.
    */
   const compose = useMutation({
     mutationFn: async (input: TComposeRequest) => {
@@ -184,7 +180,6 @@ export default function Home() {
     .filter(Boolean)
     .join("\n\n");
 
-  // 🔻 Removed: topics/getTopics, verse presence logic
   const hasPrayer = sections.length > 0;
 
   return (
@@ -199,16 +194,14 @@ export default function Home() {
               details.removeAttribute("open");
             }
           }
-          // Enter triggers compose; DO NOT send "situation"
+          // Enter triggers compose
           if (e.key === "Enter" && !compose.isPending) {
             e.preventDefault();
             compose.mutate({
               emotion,
               language: lang,
-              pronoun_style: pronoun,
-              person_name: personName ? toTitleCase(personName) : undefined,
-              show_anchor: showAnchor,
-            });
+              show_anchor: true, // always show anchor
+            } as any);
           }
         }}
         tabIndex={0}
@@ -242,8 +235,6 @@ export default function Home() {
           {/* LEFT: form */}
           <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
             <div className="flex-1 min-h-0 space-y-3">
-              {/* 🔻 Scripture Topic + Show Verse UI removed */}
-
               {/* Emotion (hydrated + stopgap) */}
               <div>
                 <label htmlFor="emotion" className="block text-sm font-medium mb-1">
@@ -268,87 +259,8 @@ export default function Home() {
                 </select>
               </div>
 
-              {/* Pronoun style */}
-              <div>
-                <label htmlFor="pronoun-style" className="block text-sm font-medium mb-1">
-                  Pronoun style
-                </label>
-                <select
-                  id="pronoun-style"
-                  name="pronoun_style"
-                  aria-label="Pronoun style"
-                  autoComplete="off"
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                  value={pronoun}
-                  onChange={(e) => setPronoun(e.target.value as TComposeRequest["pronoun_style"])}
-                  disabled={compose.isPending}
-                  aria-disabled={compose.isPending ? true : undefined}
-                >
-                  <option value="i">I / me / my</option>
-                  <option value="we">We / us / our</option>
-                  <option value="he">He / him / his</option>
-                  <option value="she">She / her / her</option>
-                  <option value="they">They / them / their</option>
-                </select>
-              </div>
-
-              {/* Person name */}
-              <div>
-                <label htmlFor="person-name" className="block text-sm font-medium mb-1">
-                  Person name (optional)
-                </label>
-                <input
-                  id="person-name"
-                  name="person_name"
-                  type="text"
-                  aria-label="Person name"
-                  autoComplete="given-name"
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                  value={personName}
-                  onChange={(e) => setPersonName(e.target.value)}
-                  placeholder="e.g., John"
-                  disabled={compose.isPending}
-                  aria-disabled={compose.isPending ? true : undefined}
-                />
-              </div>
-
-              {/* Situation input kept for now (Mission 1 only forbids sending it) */}
-              <div>
-                <label htmlFor="situation" className="block text-sm font-medium mb-1">
-                  Situation (optional)
-                </label>
-                <input
-                  id="situation"
-                  name="situation"
-                  type="text"
-                  aria-label="Situation"
-                  autoComplete="off"
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                  value={situation}
-                  onChange={(e) => setSituation(e.target.value)}
-                  placeholder="e.g., upcoming surgery"
-                  disabled={compose.isPending}
-                  aria-disabled={compose.isPending ? true : undefined}
-                />
-              </div>
-
-              {/* Toggle + Compose row */}
+              {/* Compose row only */}
               <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="show-anchor"
-                    name="show_anchor"
-                    type="checkbox"
-                    checked={showAnchor}
-                    onChange={(e) => setShowAnchor(e.target.checked)}
-                    disabled={compose.isPending}
-                    aria-disabled={compose.isPending ? true : undefined}
-                  />
-                  <label htmlFor="show-anchor" className="text-sm">
-                    Show anchor
-                  </label>
-                </div>
-
                 <button
                   aria-label="Compose prayer"
                   title="Compose prayer"
@@ -361,11 +273,8 @@ export default function Home() {
                     compose.mutate({
                       emotion,
                       language: lang,
-                      pronoun_style: pronoun,
-                      person_name: personName ? toTitleCase(personName) : undefined,
-                      // IMPORTANT: situation intentionally NOT sent
-                      show_anchor: showAnchor,
-                    })
+                      show_anchor: true, // always request anchor
+                    } as any)
                   }
                 >
                   {compose.isPending ? (
@@ -417,8 +326,6 @@ export default function Home() {
               aria-live="polite"
               aria-busy={compose.isPending ? true : undefined}
             >
-              {/* 🔻 Removed optional Scripture panel sourced from manual topic/verse */}
-
               {(!compose.data || sections.length === 0) && (
                 <p className="text-gray-500 text-sm">No prayer yet.</p>
               )}
@@ -474,20 +381,19 @@ export default function Home() {
                 onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(
-                      [
-                        // Same order users see: sections, anchor (if any), closing, footer, attribution
-                        sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n"),
-                        anchor
-                          ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${
-                              anchor.text ? `\n${anchor.text}` : ""
-                            }`
-                          : "",
-                        closing,
-                        footer,
-                        ATTRIBUTION,
-                      ]
-                        .filter(Boolean)
-                        .join("\n\n")
+                    [
+                      sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n"),
+                      anchor
+                        ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${
+                            anchor.text ? `\n${anchor.text}` : ""
+                          }`
+                        : "",
+                      closing,
+                      footer,
+                      ATTRIBUTION,
+                    ]
+                      .filter(Boolean)
+                      .join("\n\n")
                     );
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
@@ -501,7 +407,6 @@ export default function Home() {
                 title="Clear prayer output"
                 className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 onClick={() => {
-                  // 🔻 Verse state no longer exists; only reset compose + scroll top
                   compose.reset();
                   setClearNonce((n) => n + 1);
 
