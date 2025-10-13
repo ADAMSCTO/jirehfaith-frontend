@@ -190,7 +190,7 @@ export default function Home() {
     <LanguageProvider>
       <main
         id="page-top"
-        className="p-3 md:p-4 pt-4 md:pt-6 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
+        className="p-3 md:p-4 pt-2 md:pt-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             const details = document.querySelector("details");
@@ -210,7 +210,7 @@ export default function Home() {
         }}
         tabIndex={0}
       >
-        <header className="mb-2">
+        <header className="mb-1">
           <h1
             className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
             style={{ color: "var(--brand-gold)" }}
