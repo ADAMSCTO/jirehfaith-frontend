@@ -190,7 +190,7 @@ export default function Home() {
     <LanguageProvider>
       <main
         id="page-top"
-        className="p-3 md:p-4 pt-12 md:pt-16 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
+        className="p-3 md:p-4 pt-8 md:pt-12 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             const details = document.querySelector("details");
