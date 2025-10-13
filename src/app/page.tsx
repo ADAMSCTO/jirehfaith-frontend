@@ -87,7 +87,7 @@ export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
   const [emotionOptions, setEmotionOptions] = useState<string[]>(STOPGAP_EMOTIONS);
 
-  // ACTS-Y only UI (pronoun/person/situation/showAnchor removed)
+  // ACTS-Y only UI
   const [copied, setCopied] = useState(false);
   const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
   const [clearNonce, setClearNonce] = useState(0);
@@ -107,13 +107,17 @@ export default function Home() {
     };
   }, []);
 
-  // Hydrate emotions from backend and merge + de-dup with STOPGAP_EMOTIONS
+  // Hydrate emotions from backend and merge + de-dup with STOPGAP_EMOTIONS (with 2s timeout)
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 2000);
+
     (async () => {
       try {
         const res = await fetch("http://127.0.0.1:8000/dhll/emotions", {
           headers: { Accept: "application/json" },
+          signal: controller.signal,
         });
         const json = await res.json().catch(() => ({}));
         const server = Array.isArray((json as any)?.emotions)
@@ -124,16 +128,21 @@ export default function Home() {
         const merged = Array.from(new Set([...STOPGAP_EMOTIONS, ...server]));
         if (!cancelled) setEmotionOptions(merged);
       } catch {
-        // If fetch fails, keep STOPGAP_EMOTIONS so UI still works
+        // keep STOPGAP_EMOTIONS
+      } finally {
+        window.clearTimeout(timeoutId);
       }
     })();
+
     return () => {
       cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeoutId);
     };
   }, []);
 
   /** Compose client — ACTS-Y only (no pronoun/person/situation).
-   *  Scrolls to an offset anchor so content never slides under the header.
+   *  NOTE: Removed auto scroll to avoid header overlap.
    */
   const compose = useMutation({
     mutationFn: async (input: TComposeRequest) => {
@@ -151,11 +160,7 @@ export default function Home() {
       return data;
     },
     onSuccess: () => {
-      try {
-        document
-          .getElementById("output-scroll-anchor")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      } catch {}
+      // intentionally no scrollIntoView to prevent sliding under fixed header
     },
   });
 
@@ -185,7 +190,7 @@ export default function Home() {
     <LanguageProvider>
       <main
         id="page-top"
-        className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
+        className="p-3 md:p-4 pt-24 md:pt-28 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             const details = document.querySelector("details");
@@ -316,9 +321,6 @@ export default function Home() {
             <div className="mb-3 flex items-center justify-between border-b pb-2">
               <h2 className="text-xl font-medium">Prayer</h2>
             </div>
-
-            {/* Scroll offset anchor (prevents content from sliding under a fixed header) */}
-            <div id="output-scroll-anchor" className="block h-32 -mt-32 pointer-events-none" />
 
             {/* Content area */}
             <div
