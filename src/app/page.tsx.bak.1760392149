@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
@@ -28,16 +27,18 @@ function toTitleCase(name: string) {
     .replace(/\b\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }
 
-/** Normalize backend sections to an array */
 function normalizeSections(data: any) {
   const raw = (data as any)?.sections ?? (data as any)?.output ?? data;
 
+  // If backend already returns an array, normalize each item to { title, content }
   if (Array.isArray(raw)) {
     return raw.map((s: any) => ({
       title: String(s?.title ?? s?.name ?? ""),
       content: String(s?.content ?? s?.body ?? ""),
     }));
   }
+
+  // If it's an object map, normalize values that might be strings or objects
   if (raw && typeof raw === "object") {
     return Object.entries(raw).map(([title, content]) => ({
       title,
@@ -46,23 +47,13 @@ function normalizeSections(data: any) {
       ),
     }));
   }
+
+  // If it's a single string, wrap it
   if (typeof raw === "string") {
     return [{ title: "Prayer", content: raw }];
   }
-  return [];
-}
 
-/** Personalization cue: bold the parenthetical where users speak their situation/condition.
- * We do not change words—only emphasize that interactive cue.
- */
-function emphasizePersonalCueInline(s: string) {
-  const safe = String(s ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-  const pattern =
-    /\(([^)]*(?:situation|situ[aã]|situación|situação|condi[cç][aã]o)[^)]*)\)/giu;
-  return safe.replace(pattern, (_m, inner) => `<strong>(${inner})</strong>`);
+  return [];
 }
 
 /** Stopgap list + hydration
@@ -225,21 +216,17 @@ export default function Home() {
             className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
             style={{ color: "var(--brand-gold)" }}
           >
-            <Image
+            <img
               src="/icons/praying-hands-gold.png"
               alt=""
               aria-hidden="true"
-              width={32}
-              height={32}
               className="h-8 w-8"
             />
             Prayer Composer with The Holy Bible Scriptures
-            <Image
+            <img
               src="/open-bible-gold.png"
               alt=""
               aria-hidden="true"
-              width={32}
-              height={32}
               className="h-8 w-8"
             />
           </h1>
@@ -486,12 +473,7 @@ export default function Home() {
                   {sections.map((s: any, idx: number) => (
                     <div key={idx}>
                       <div className="font-semibold">{prettyTitle(String(s.title))}</div>
-                      <div
-                        className="whitespace-pre-wrap"
-                        dangerouslySetInnerHTML={{
-                          __html: emphasizePersonalCueInline(String(s.content)),
-                        }}
-                      />
+                      <div className="whitespace-pre-wrap">{s.content}</div>
                     </div>
                   ))}
 
@@ -516,6 +498,7 @@ export default function Home() {
                   )}
 
                   <div className="mt-3 text-xs text-gray-500 italic">{ATTRIBUTION}</div>
+
                 </>
               )}
             </div>
