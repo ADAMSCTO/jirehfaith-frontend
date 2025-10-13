@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
-import { getTopics, getNextNonRepeatingVerse, type Verse } from "@/lib/verses";
+// 🔻 Removed all verse/helpers imports
 import { getLang, onLangChange, preloadCurrentLang, type Lang } from "@/lib/i18n";
 import { LanguageProvider } from "@/lib/LanguageContext";
 
@@ -18,7 +18,7 @@ function prettyTitle(title: string) {
   const key = String(title || "").replace(/_/g, " ").trim();
   if (key.toLowerCase() === "yielding listening" || key.toLowerCase() === "yielding_listening") {
     return "Yielding / Listening";
-  }
+    }
   return key.replace(/\b\w/g, (ch) => ch.toUpperCase());
 }
 
@@ -52,9 +52,7 @@ function normalizeSections(data: any) {
   return [];
 }
 
-/** Personalization cue: bold the parenthetical where users speak their situation/condition.
- * We do not change words—only emphasize that interactive cue.
- */
+/** Personalization cue: bold the parenthetical where users speak their situation/condition. */
 function emphasizePersonalCueInline(s: string) {
   const safe = String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -65,10 +63,7 @@ function emphasizePersonalCueInline(s: string) {
   return safe.replace(pattern, (_m, inner) => `<strong>(${inner})</strong>`);
 }
 
-/** Stopgap list + hydration
- * - Add missing: peace, success, protection
- * - Hydrate from /dhll/emotions and merge (de-dup)
- */
+/** Stopgap list + hydration (Mission 1) */
 const STOPGAP_EMOTIONS = [
   "anxiety",
   "grief",
@@ -82,7 +77,7 @@ const STOPGAP_EMOTIONS = [
   "relationship_trials",
   "illness",
   "despair",
-  // Newly added as required by Mission 1:
+  // Added in Mission 1
   "peace",
   "success",
   "protection",
@@ -98,8 +93,7 @@ export default function Home() {
   const [showAnchor, setShowAnchor] = useState(true);
   const [copied, setCopied] = useState(false);
   const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
-  const [topic, setTopic] = useState<string>("comfort");
-  const [verse, setVerse] = useState<Verse | null>(null);
+  // 🔻 Removed topic + verse + Verse type
   const [clearNonce, setClearNonce] = useState(0);
 
   // Keep page language in sync with global i18n (controlled by Header selector)
@@ -190,9 +184,8 @@ export default function Home() {
     .filter(Boolean)
     .join("\n\n");
 
-  const topics = getTopics();
+  // 🔻 Removed: topics/getTopics, verse presence logic
   const hasPrayer = sections.length > 0;
-  const hasOutput = hasPrayer || !!verse;
 
   return (
     <LanguageProvider>
@@ -245,53 +238,11 @@ export default function Home() {
           </h1>
         </header>
 
-        <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
+        <div className="grid gap-3 md:h/full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
           {/* LEFT: form */}
           <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
             <div className="flex-1 min-h-0 space-y-3">
-              {/* Scripture topic + selector (kept for now) */}
-              <div>
-                <label htmlFor="topic" className="block text-sm font-medium mb-1">
-                  Scripture topic
-                </label>
-                <div className="flex items-center gap-2 flex-wrap w-full">
-                  <select
-                    id="topic"
-                    name="topic"
-                    aria-label="Scripture topic"
-                    autoComplete="off"
-                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    disabled={compose.isPending}
-                    aria-disabled={compose.isPending ? true : undefined}
-                  >
-                    {topics.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-lg bg-black text-white px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                    onClick={() => {
-                      setVerse(getNextNonRepeatingVerse(topic));
-                      setTimeout(() => {
-                        document.getElementById("prayer-output")?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                      }, 0);
-                    }}
-                    disabled={compose.isPending}
-                    aria-disabled={compose.isPending ? true : undefined}
-                    title="Show a verse for the selected topic"
-                  >
-                    Show verse
-                  </button>
-                </div>
-              </div>
+              {/* 🔻 Scripture Topic + Show Verse UI removed */}
 
               {/* Emotion (hydrated + stopgap) */}
               <div>
@@ -466,16 +417,7 @@ export default function Home() {
               aria-live="polite"
               aria-busy={compose.isPending ? true : undefined}
             >
-              {/* Scripture display (if selected) */}
-              {verse && (
-                <div className="rounded-md bg-[var(--header)]/20 border p-2">
-                  <div className="text-sm font-medium">Scripture</div>
-                  <div className="text-sm italic whitespace-pre-wrap">{verse.text}</div>
-                  <div className="text-xs mt-1">
-                    {verse.reference} ({verse.version})
-                  </div>
-                </div>
-              )}
+              {/* 🔻 Removed optional Scripture panel sourced from manual topic/verse */}
 
               {(!compose.data || sections.length === 0) && (
                 <p className="text-gray-500 text-sm">No prayer yet.</p>
@@ -520,7 +462,7 @@ export default function Home() {
               )}
             </div>
 
-            {/* Footer with Copy button (always rendered, disabled until content exists) */}
+            {/* Footer with Copy/Clear */}
             <div className="mt-4 pt-2 border-t">
               <button
                 aria-label="Copy full prayer"
@@ -531,7 +473,22 @@ export default function Home() {
                 aria-describedby="copy-status"
                 onClick={async () => {
                   try {
-                    await navigator.clipboard.writeText(fullPrayer);
+                    await navigator.clipboard.writeText(
+                      [
+                        // Same order users see: sections, anchor (if any), closing, footer, attribution
+                        sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n"),
+                        anchor
+                          ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${
+                              anchor.text ? `\n${anchor.text}` : ""
+                            }`
+                          : "",
+                        closing,
+                        footer,
+                        ATTRIBUTION,
+                      ]
+                        .filter(Boolean)
+                        .join("\n\n")
+                    );
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   } catch {}
@@ -544,8 +501,7 @@ export default function Home() {
                 title="Clear prayer output"
                 className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 onClick={() => {
-                  // Clear both verse and composed output
-                  setVerse(null);
+                  // 🔻 Verse state no longer exists; only reset compose + scroll top
                   compose.reset();
                   setClearNonce((n) => n + 1);
 
@@ -568,8 +524,8 @@ export default function Home() {
                   };
                   setTimeout(doTop, 0);
                 }}
-                disabled={!hasOutput}
-                aria-disabled={!hasOutput ? true : undefined}
+                disabled={!hasPrayer}
+                aria-disabled={!hasPrayer ? true : undefined}
               >
                 Clear
               </button>
