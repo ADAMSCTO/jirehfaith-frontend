@@ -190,7 +190,7 @@ export default function Home() {
     <LanguageProvider>
       <main
         id="page-top"
-        className="p-3 md:p-4 pt-8 md:pt-12 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
+        className="p-3 md:p-4 pt-4 md:pt-6 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             const details = document.querySelector("details");
@@ -210,7 +210,7 @@ export default function Home() {
         }}
         tabIndex={0}
       >
-        <header className="mb-4">
+        <header className="mb-2">
           <h1
             className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
             style={{ color: "var(--brand-gold)" }}
@@ -235,7 +235,7 @@ export default function Home() {
           </h1>
         </header>
 
-        <div className="grid gap-3 grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-start">
+        <div className="grid gap-2 grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-start">
           {/* LEFT: form */}
           <section className="self-start border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[200px] flex flex-col">
             <div className="space-y-3">
