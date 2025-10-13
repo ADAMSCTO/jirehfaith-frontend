@@ -12,7 +12,7 @@ const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
 const ATTRIBUTION = `— Source: ${SITE_NAME} (${SITE_URL})`;
 
-// Normalize various possible response shapes into an array of {title, content}
+/** ---------------- Utility helpers ---------------- */
 function prettyTitle(title: string) {
   const key = String(title || "").replace(/_/g, " ").trim();
   if (key.toLowerCase() === "yielding listening" || key.toLowerCase() === "yielding_listening") {
@@ -27,19 +27,22 @@ function toTitleCase(name: string) {
     .replace(/\b\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
 }
 
-function normalizeSituation(s: string) {
-  const cleaned = String(s || "").trim().replace(/\s+/g, " ");
-  if (!cleaned) return "";
-  return cleaned[0].toUpperCase() + cleaned.slice(1);
-}
-
+/** Normalize backend sections to an array */
 function normalizeSections(data: any) {
   const raw = (data as any)?.sections ?? (data as any)?.output ?? data;
-  if (Array.isArray(raw)) return raw;
+
+  if (Array.isArray(raw)) {
+    return raw.map((s: any) => ({
+      title: String(s?.title ?? s?.name ?? ""),
+      content: String(s?.content ?? s?.body ?? ""),
+    }));
+  }
   if (raw && typeof raw === "object") {
     return Object.entries(raw).map(([title, content]) => ({
       title,
-      content: String(content ?? ""),
+      content: String(
+        (content as any)?.content ?? (content as any)?.body ?? content ?? ""
+      ),
     }));
   }
   if (typeof raw === "string") {
@@ -48,11 +51,49 @@ function normalizeSections(data: any) {
   return [];
 }
 
+/** Personalization cue: bold the parenthetical where users speak their situation/condition.
+ * We do not change words—only emphasize that interactive cue.
+ */
+function emphasizePersonalCueInline(s: string) {
+  const safe = String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const pattern =
+    /\(([^)]*(?:situation|situ[aã]|situación|situação|condi[cç][aã]o)[^)]*)\)/giu;
+  return safe.replace(pattern, (_m, inner) => `<strong>(${inner})</strong>`);
+}
+
+/** Stopgap list + hydration
+ * - Add missing: peace, success, protection
+ * - Hydrate from /dhll/emotions and merge (de-dup)
+ */
+const STOPGAP_EMOTIONS = [
+  "anxiety",
+  "grief",
+  "fear",
+  "anger",
+  "love",
+  "perseverance",
+  "hope",
+  "joy",
+  "financial_trials",
+  "relationship_trials",
+  "illness",
+  "despair",
+  // Newly added as required by Mission 1:
+  "peace",
+  "success",
+  "protection",
+];
+
 export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
+  const [emotionOptions, setEmotionOptions] = useState<string[]>(STOPGAP_EMOTIONS);
+
   const [pronoun, setPronoun] = useState<TComposeRequest["pronoun_style"]>("we");
   const [personName, setPersonName] = useState("");
-  const [situation, setSituation] = useState("");
+  const [situation, setSituation] = useState(""); // kept in UI for now, but NEVER sent
   const [showAnchor, setShowAnchor] = useState(true);
   const [copied, setCopied] = useState(false);
   const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
@@ -75,10 +116,43 @@ export default function Home() {
     };
   }, []);
 
+  // Hydrate emotions from backend and merge + de-dup with STOPGAP_EMOTIONS
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/dhll/emotions", {
+          headers: { Accept: "application/json" },
+        });
+        const json = await res.json().catch(() => ({}));
+        const server = Array.isArray((json as any)?.emotions)
+          ? (json as any).emotions
+          : Array.isArray(json)
+          ? (json as string[])
+          : [];
+        const merged = Array.from(new Set([...STOPGAP_EMOTIONS, ...server]));
+        if (!cancelled) setEmotionOptions(merged);
+      } catch {
+        // If fetch fails, keep STOPGAP_EMOTIONS so UI still works
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  /** Compose client
+   *  IMPORTANT: Do NOT send "situation" (Mission 1 guardrail)
+   *  Ensure utf-8 content-type
+   */
   const compose = useMutation({
     mutationFn: async (input: TComposeRequest) => {
       const startedAt = Date.now();
-      const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
+      const { data } = await api.post<TComposeResponse>(
+        "http://127.0.0.1:8000/dhll/compose",
+        input,
+        { headers: { "Content-Type": "application/json; charset=utf-8" } }
+      );
       const elapsed = Date.now() - startedAt;
       try {
         localStorage.setItem("jf:lastResponseMs", String(elapsed));
@@ -96,12 +170,25 @@ export default function Home() {
   });
 
   const sections = normalizeSections(compose.data);
+  const anchor = (compose.data as any)?.anchor;
+  const closing = (compose.data as any)?.closing || "";
+  const footer = (compose.data as any)?.footer || "";
+
   const prayerBase =
     compose.data && (compose.data as any).prayer
       ? String((compose.data as any).prayer)
       : sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n");
-  const fullPrayer = `${prayerBase}\n\n${ATTRIBUTION}`;
-  const anchor = (compose.data as any)?.anchor;
+
+  const anchorBlock =
+    anchor && (anchor.reference || anchor.text)
+      ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${anchor.text ? `\n${anchor.text}` : ""}`
+      : "";
+
+  // Include closing + footer in the copied text
+  const fullPrayer = [prayerBase, anchorBlock, closing, footer, ATTRIBUTION]
+    .filter(Boolean)
+    .join("\n\n");
+
   const topics = getTopics();
   const hasPrayer = sections.length > 0;
   const hasOutput = hasPrayer || !!verse;
@@ -117,6 +204,17 @@ export default function Home() {
             if (details && details.open) {
               details.removeAttribute("open");
             }
+          }
+          // Enter triggers compose; DO NOT send "situation"
+          if (e.key === "Enter" && !compose.isPending) {
+            e.preventDefault();
+            compose.mutate({
+              emotion,
+              language: lang,
+              pronoun_style: pronoun,
+              person_name: personName ? toTitleCase(personName) : undefined,
+              show_anchor: showAnchor,
+            });
           }
         }}
         tabIndex={0}
@@ -145,23 +243,8 @@ export default function Home() {
         <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
           {/* LEFT: form */}
           <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
-            <div
-              className="flex-1 min-h-0 space-y-3"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !compose.isPending) {
-                  e.preventDefault();
-                  compose.mutate({
-                    emotion,
-                    language: lang,
-                    pronoun_style: pronoun,
-                    person_name: personName ? toTitleCase(personName) : undefined,
-                    situation: normalizeSituation(situation) || undefined,
-                    show_anchor: showAnchor,
-                  });
-                }
-              }}
-            >
-              {/* Scripture topic + selector */}
+            <div className="flex-1 min-h-0 space-y-3">
+              {/* Scripture topic + selector (kept for now) */}
               <div>
                 <label htmlFor="topic" className="block text-sm font-medium mb-1">
                   Scripture topic
@@ -191,8 +274,8 @@ export default function Home() {
                       setVerse(getNextNonRepeatingVerse(topic));
                       setTimeout(() => {
                         document.getElementById("prayer-output")?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'start',
+                          behavior: "smooth",
+                          block: "start",
                         });
                       }, 0);
                     }}
@@ -205,7 +288,7 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Emotion */}
+              {/* Emotion (hydrated + stopgap) */}
               <div>
                 <label htmlFor="emotion" className="block text-sm font-medium mb-1">
                   Emotion
@@ -221,18 +304,11 @@ export default function Home() {
                   disabled={compose.isPending}
                   aria-disabled={compose.isPending ? true : undefined}
                 >
-                  <option value="anxiety">anxiety</option>
-                  <option value="grief">grief</option>
-                  <option value="fear">fear</option>
-                  <option value="anger">anger</option>
-                  <option value="love">love</option>
-                  <option value="perseverance">perseverance</option>
-                  <option value="hope">hope</option>
-                  <option value="joy">joy</option>
-                  <option value="financial_trials">financial trials</option>
-                  <option value="relationship_trials">relationship trials</option>
-                  <option value="illness">illness</option>
-                  <option value="despair">despair</option>
+                  {emotionOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt.replace(/_/g, " ")}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -280,7 +356,7 @@ export default function Home() {
                 />
               </div>
 
-              {/* Situation */}
+              {/* Situation input kept for now (Mission 1 only forbids sending it) */}
               <div>
                 <label htmlFor="situation" className="block text-sm font-medium mb-1">
                   Situation (optional)
@@ -331,7 +407,7 @@ export default function Home() {
                       language: lang,
                       pronoun_style: pronoun,
                       person_name: personName ? toTitleCase(personName) : undefined,
-                      situation: normalizeSituation(situation) || undefined,
+                      // IMPORTANT: situation intentionally NOT sent
                       show_anchor: showAnchor,
                     })
                   }
@@ -405,17 +481,32 @@ export default function Home() {
                   {sections.map((s: any, idx: number) => (
                     <div key={idx}>
                       <div className="font-semibold">{prettyTitle(String(s.title))}</div>
-                      <div className="whitespace-pre-wrap">{s.content}</div>
+                      <div
+                        className="whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{
+                          __html: emphasizePersonalCueInline(String(s.content)),
+                        }}
+                      />
                     </div>
                   ))}
 
                   {anchor && (
                     <div className="border-t pt-3 text-sm">
-                      <div className="font-semibold">Anchor</div>
+                      <div className="font-semibold">Scripture</div>
                       <div className="whitespace-pre-wrap">
-                        {anchor.ref}
-                        {anchor.text ? ` — ${anchor.text}` : ""}
+                        {anchor.reference}
+                        {anchor.version ? ` (${anchor.version})` : ""}
                       </div>
+                      {anchor.text && <div className="italic whitespace-pre-wrap mt-1">{anchor.text}</div>}
+                    </div>
+                  )}
+
+                  {/* Closing + Footer with separator BETWEEN them (no gap after Yielding) */}
+                  {(closing || footer) && (
+                    <div className="text-sm -mt-4">
+                      {closing && <div className="whitespace-pre-wrap">{closing}</div>}
+                      {closing && footer && <div className="border-t my-2" />}
+                      {footer && <div className="text-xs text-gray-600">{footer}</div>}
                     </div>
                   )}
 
@@ -456,9 +547,9 @@ export default function Home() {
                   // Defer + double-pass to defeat WebView timing quirks
                   const doTop = () => {
                     try {
-                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                      document.body?.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+                      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                      document.body?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
                     } catch {
                       window.scrollTo(0, 0);
                     }

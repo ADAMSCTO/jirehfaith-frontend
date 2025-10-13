@@ -13,13 +13,36 @@ type ComposeResp = {
   references?: string[]; // optional scripture refs, e.g., ["Psalm 23:1", "Matt 6:34"]
 };
 
+// Stopgap options; will be merged with server list
+const STOPGAP_EMOTIONS = [
+  "anxiety",
+  "grief",
+  "fear",
+  "anger",
+  "love",
+  "perseverance",
+  "hope",
+  "joy",
+  "financial_trials",
+  "relationship_trials",
+  "illness",
+  "despair",
+  // Mission 1: add the three missing
+  "peace",
+  "success",
+  "protection",
+];
+
 export default function JFTester() {
   const [health, setHealth] = useState<null | { ok: boolean; version?: string }>(null);
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [emotion, setEmotion] = useState("anxiety");
+  const [emotionOptions, setEmotionOptions] = useState<string[]>(STOPGAP_EMOTIONS);
+
   const [personName, setPersonName] = useState("Jose");
+  // Keep UI field for situation, but DO NOT send it to backend (Mission 1 guardrail)
   const [situation, setSituation] = useState("Facing uncertainty about work this week");
   const [pronoun, setPronoun] = useState<"we" | "I">("we");
 
@@ -29,6 +52,7 @@ export default function JFTester() {
 
   const api = useMemo(() => (API_BASE || "").replace(/\/$/, ""), []);
 
+  // Health check
   useEffect(() => {
     const check = async () => {
       try {
@@ -38,17 +62,36 @@ export default function JFTester() {
         const data = await res.json();
         setHealth(data);
       } catch (e: unknown) {
-        // Correct error handling with type narrowing
-        if (e instanceof Error) {
-          setError(e.message);
-        } else {
-          setError("Health check failed");
-        }
+        if (e instanceof Error) setError(e.message);
+        else setError("Health check failed");
       } finally {
         setChecking(false);
       }
     };
     check();
+  }, [api]);
+
+  // Hydrate emotions from backend and merge + de-dup with STOPGAP_EMOTIONS
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`${api}/dhll/emotions`, { headers: { Accept: "application/json" } });
+        const json = await res.json().catch(() => ({}));
+        const server = Array.isArray((json as any)?.emotions)
+          ? (json as any).emotions
+          : Array.isArray(json)
+          ? (json as string[])
+          : [];
+        const merged = Array.from(new Set([...STOPGAP_EMOTIONS, ...server]));
+        if (!cancelled) setEmotionOptions(merged);
+      } catch {
+        // keep STOPGAP_EMOTIONS if fetch fails
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [api]);
 
   const doMap = async () => {
@@ -58,23 +101,15 @@ export default function JFTester() {
       setMapResult(null);
       const res = await fetch(`${api}/dhll/map`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json; charset=utf-8" },
         body: JSON.stringify({ emotion, language: "en" }),
       });
       const data = await res.json();
-      // Ensure type safety by checking data type
-      if (data && typeof data === "object") {
-        setMapResult(data as MapResp);
-      } else {
-        setError("Invalid response format for map");
-      }
+      if (data && typeof data === "object") setMapResult(data as MapResp);
+      else setError("Invalid response format for map");
     } catch (e: unknown) {
-      // Correct error handling with type narrowing
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError("Map failed");
-      }
+      if (e instanceof Error) setError(e.message);
+      else setError("Map failed");
     } finally {
       setBusy(false);
     }
@@ -86,34 +121,26 @@ export default function JFTester() {
       setError(null);
       setComposeResult(null);
       const res = await fetch(`${api}/dhll/compose`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    emotion,
-    language: "en",
-    pronoun_style: pronoun,
-    person_name: personName || undefined,
-    situation: situation || undefined,
-    show_anchor: true,
-    richness: "rich",            // request broader vocabulary
-    include_references: true,    // request scripture references
-  }),
-});
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({
+          emotion,
+          language: "en",
+          pronoun_style: pronoun,
+          person_name: personName || undefined,
+          // IMPORTANT: situation intentionally NOT sent (Mission 1)
+          show_anchor: true,
+          richness: "rich",            // request broader vocabulary
+          include_references: true,    // request scripture references
+        }),
+      });
 
       const data = await res.json();
-      // Ensure type safety by checking data type
-      if (data && typeof data === "object") {
-        setComposeResult(data as ComposeResp);
-      } else {
-        setError("Invalid response format for compose");
-      }
+      if (data && typeof data === "object") setComposeResult(data as ComposeResp);
+      else setError("Invalid response format for compose");
     } catch (e: unknown) {
-      // Correct error handling with type narrowing
-      if (e instanceof Error) {
-        setError(e.message);
-      } else {
-        setError("Compose failed");
-      }
+      if (e instanceof Error) setError(e.message);
+      else setError("Compose failed");
     } finally {
       setBusy(false);
     }
@@ -150,11 +177,17 @@ export default function JFTester() {
           <div className="grid gap-2">
             <label className="text-sm font-semibold">Emotion</label>
             <input
+              list="emotion-list"
               value={emotion}
               onChange={(e) => setEmotion(e.target.value)}
               className="border rounded-lg px-3 py-2"
               placeholder="e.g., anxiety, joy"
             />
+            <datalist id="emotion-list">
+              {emotionOptions.map((opt) => (
+                <option key={opt} value={opt} />
+              ))}
+            </datalist>
           </div>
 
           <div className="grid gap-2">
@@ -168,7 +201,7 @@ export default function JFTester() {
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-semibold">Situation (optional)</label>
+            <label className="text-sm font-semibold">Situation (optional — not sent)</label>
             <input
               value={situation}
               onChange={(e) => setSituation(e.target.value)}
@@ -248,7 +281,6 @@ export default function JFTester() {
                 </ul>
               </div>
             ) : null}
-
           </section>
         )}
       </div>
