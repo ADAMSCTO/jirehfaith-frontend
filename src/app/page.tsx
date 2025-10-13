@@ -87,7 +87,7 @@ export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
   const [emotionOptions, setEmotionOptions] = useState<string[]>(STOPGAP_EMOTIONS);
 
-  // 🔻 Removed pronoun/person/situation/showAnchor; lean ACTS-Y only
+  // ACTS-Y only UI (pronoun/person/situation/showAnchor removed)
   const [copied, setCopied] = useState(false);
   const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
   const [clearNonce, setClearNonce] = useState(0);
@@ -132,9 +132,8 @@ export default function Home() {
     };
   }, []);
 
-  /** Compose client
-   *  IMPORTANT: Pure ACTS-Y — do not send pronoun/person/situation.
-   *  Keep anchor visible; request it explicitly.
+  /** Compose client — ACTS-Y only (no pronoun/person/situation).
+   *  Scrolls to an offset anchor so content never slides under the header.
    */
   const compose = useMutation({
     mutationFn: async (input: TComposeRequest) => {
@@ -154,7 +153,7 @@ export default function Home() {
     onSuccess: () => {
       try {
         document
-          .getElementById("prayer-output")
+          .getElementById("output-scroll-anchor")
           ?.scrollIntoView({ behavior: "smooth", block: "start" });
       } catch {}
     },
@@ -318,6 +317,9 @@ export default function Home() {
               <h2 className="text-xl font-medium">Prayer</h2>
             </div>
 
+            {/* Scroll offset anchor (prevents content from sliding under a fixed header) */}
+            <div id="output-scroll-anchor" className="block h-32 -mt-32 pointer-events-none" />
+
             {/* Content area */}
             <div
               id="prayer-output"
@@ -381,19 +383,19 @@ export default function Home() {
                 onClick={async () => {
                   try {
                     await navigator.clipboard.writeText(
-                    [
-                      sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n"),
-                      anchor
-                        ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${
-                            anchor.text ? `\n${anchor.text}` : ""
-                          }`
-                        : "",
-                      closing,
-                      footer,
-                      ATTRIBUTION,
-                    ]
-                      .filter(Boolean)
-                      .join("\n\n")
+                      [
+                        sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n"),
+                        anchor
+                          ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${
+                              anchor.text ? `\n${anchor.text}` : ""
+                            }`
+                          : "",
+                        closing,
+                        footer,
+                        ATTRIBUTION,
+                      ]
+                        .filter(Boolean)
+                        .join("\n\n")
                     );
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
