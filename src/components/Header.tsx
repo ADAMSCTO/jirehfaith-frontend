@@ -2,22 +2,29 @@
 
 import { useEffect, useState } from "react";
 import { getLang, setLang, onLangChange, type Lang, preloadCurrentLang, t } from "@/lib/i18n";
-import Link from "next/link"; // Import Link from Next.js
+import Link from "next/link";
 
 export default function Header() {
+  const [lang, setLangState] = useState<Lang>("en");
+
+  // Translate with fallback to keep UI resilient if a key is missing
   const tt = (key: string, fallback: string) => {
     const v = t(key, lang);
     return v === key ? fallback : v;
   };
-  const [lang, setLangState] = useState<Lang>("en");
 
   // Sync state with persisted language
   useEffect(() => {
     const current = getLang();
     setLangState(current);
     preloadCurrentLang();
-    const unsub = onLangChange((l) => setLangState(l));
-    return () => unsub();
+    const unsub = onLangChange((l) => {
+    preloadCurrentLang();
+    setLangState(l);
+  });
+    return () => {
+      try { unsub(); } catch {}
+    };
   }, []);
 
   const handleLangChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -32,18 +39,18 @@ export default function Header() {
         {/* Center title / logo block */}
         <Link
           href="/"
-          aria-label="Go to Home"
-          title="Home"
+          aria-label={tt("nav.home", "Home")}
+          title={tt("nav.home", "Home")}
           className="flex flex-col items-center text-center flex-grow leading-tight w-full order-2 md:order-none focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)] cursor-pointer"
         >
           <div className="text-3xl" style={{ color: "var(--brand-gold)" }}>
             🔥
           </div>
           <div className="text-2xl font-bold" style={{ color: "var(--brand-gold)" }}>
-            JIREH FAITH
+            {tt("hero.title", "JIREH FAITH")}
           </div>
           <div className="text-base italic" style={{ color: "var(--brand-gold)" }}>
-            When life speaks, let God’s Word answer.
+            {tt("hero.tagline", "When life speaks, let God’s Word answer.")}
           </div>
         </Link>
 
@@ -52,7 +59,8 @@ export default function Header() {
           {/* HOME */}
           <Link
             href="/"
-            aria-label="Home"
+            aria-label={tt("nav.home", "Home")}
+            title={tt("nav.home", "Home")}
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
           >
@@ -62,7 +70,8 @@ export default function Header() {
           {/* DONATE */}
           <Link
             href="/donate"
-            aria-label="Donate"
+            aria-label={tt("nav.donate", "Donate")}
+            title={tt("nav.donate", "Donate")}
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
           >
@@ -72,7 +81,8 @@ export default function Header() {
           {/* ABOUT */}
           <Link
             href="/about"
-            aria-label="About"
+            aria-label={tt("nav.about", "About")}
+            title={tt("nav.about", "About")}
             className="px-3 py-1 rounded-md border text-black hover:opacity-90 flex items-center gap-2"
             style={{ backgroundColor: "var(--brand-gold)" }}
           >
@@ -87,7 +97,7 @@ export default function Header() {
             autoComplete="off"
             value={lang}
             onChange={handleLangChange}
-            title="Language"
+            title={tt("lang.selector.label", "Language")}
             className="ml-2 md:ml-6 px-2 py-1 border rounded-md bg-white text-black shrink-0"
             style={{ borderColor: "var(--brand-gold)" }}
           >

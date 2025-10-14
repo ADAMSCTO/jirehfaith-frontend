@@ -1,84 +1,178 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
-import { getTopics, getNextNonRepeatingVerse, type Verse } from "@/lib/verses";
-import { getLang, onLangChange, preloadCurrentLang, type Lang } from "@/lib/i18n";
+import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 import { LanguageProvider } from "@/lib/LanguageContext";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
 const ATTRIBUTION = `— Source: ${SITE_NAME} (${SITE_URL})`;
 
-// Normalize various possible response shapes into an array of {title, content}
-function prettyTitle(title: string) {
-  const key = String(title || "").replace(/_/g, " ").trim();
-  if (key.toLowerCase() === "yielding listening" || key.toLowerCase() === "yielding_listening") {
-    return "Yielding / Listening";
-  }
-  return key.replace(/\b\w/g, (ch) => ch.toUpperCase());
-}
+/** ---------------- Utility helpers ---------------- */
 
-function toTitleCase(name: string) {
-  return String(name || "")
-    .trim()
-    .replace(/\b\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase());
-}
-
-function normalizeSituation(s: string) {
-  const cleaned = String(s || "").trim().replace(/\s+/g, " ");
-  if (!cleaned) return "";
-  return cleaned[0].toUpperCase() + cleaned.slice(1);
-}
-
-function normalizeSections(data: any) {
+/** Normalize backend sections to an array */
+function normalizeSections(data: any, lang: Lang) {
   const raw = (data as any)?.sections ?? (data as any)?.output ?? data;
-  if (Array.isArray(raw)) return raw;
+
+  if (Array.isArray(raw)) {
+    return raw.map((s: any) => ({
+      title: String(s?.title ?? s?.name ?? ""),
+      content: String(s?.content ?? s?.body ?? ""),
+    }));
+  }
   if (raw && typeof raw === "object") {
     return Object.entries(raw).map(([title, content]) => ({
       title,
-      content: String(content ?? ""),
+      content: String(
+        (content as any)?.content ?? (content as any)?.body ?? content ?? ""
+      ),
     }));
   }
   if (typeof raw === "string") {
-    return [{ title: "Prayer", content: raw }];
+    return [{ title: t("output.prayer", lang), content: raw }];
   }
   return [];
 }
 
+/** Emphasize the parenthetical where users speak their situation/condition. */
+function emphasizePersonalCueInline(s: string) {
+  const safe = String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const pattern =
+    /\(([^)]*(?:state your condition|condition|condici[oó]n|condi[cç][aã]o|situ[aã]?[cç][aã]o|situaci[oó]n|situ[aã]o|situation)[^)]*)\)/giu;
+  return safe.replace(pattern, (_m, inner) => `<strong>(${inner})</strong>`);
+}
+
+/** Localized label for emotion IDs; falls back to title-cased ID when no key exists. */
+function labelForEmotion(id: string, lang: Lang): string {
+  try {
+    const key = `emotion.${id}`;
+    const translated = t(key, lang);
+    if (translated === key) {
+      return id.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+    }
+    return translated;
+  } catch {
+    return id.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+  }
+}
+
+/** Localized ACTS-Y section titles (trim + robust normalization) */
+function sectionLabel(title: string, lang: Lang): string {
+  const raw = String(title || "");
+  const key = raw.trim().toLowerCase().replace(/[\s\/-]+/g, "_");
+  const map: Record<string,string> = {
+    adoration: "acts.adoration",
+    confession: "acts.confession",
+    thanksgiving: "acts.thanksgiving",
+    supplication: "acts.supplication",
+    yielding: "acts.yielding",
+    yielding_listening: "acts.yielding_listening",
+  };
+  const tkey = map[key];
+  if (tkey) {
+    const val = t(tkey, lang);
+    if (val !== tkey) return val;
+  }
+  return raw ? raw.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : raw;
+}
+
+const STOPGAP_EMOTIONS = [
+  "anxiety",
+  "grief",
+  "fear",
+  "anger",
+  "love",
+  "perseverance",
+  "hope",
+  "joy",
+  "financial_trials",
+  "relationship_trials",
+  "illness",
+  "despair",
+  // Added in Mission 1
+  "peace",
+  "success",
+  "protection",
+];
+
 export default function Home() {
   const [emotion, setEmotion] = useState("anxiety");
-  const [pronoun, setPronoun] = useState<TComposeRequest["pronoun_style"]>("we");
-  const [personName, setPersonName] = useState("");
-  const [situation, setSituation] = useState("");
-  const [showAnchor, setShowAnchor] = useState(true);
+  const [emotionOptions, setEmotionOptions] = useState<string[]>(STOPGAP_EMOTIONS);
+
+  // ACTS-Y only UI
   const [copied, setCopied] = useState(false);
-  const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
-  const [topic, setTopic] = useState<string>("comfort");
-  const [verse, setVerse] = useState<Verse | null>(null);
+  const [lang, setLangState] = useState<Lang>("en");
   const [clearNonce, setClearNonce] = useState(0);
 
-  // Keep page language in sync with global i18n (controlled by Header selector)
+  // tiny translate helper bound to current lang
+  const tl = (key: string) => t(key, lang);
+
+  // Keep page language in sync with global i18n (Header selector)
   useEffect(() => {
     try {
       preloadCurrentLang();
     } catch {}
     const current = getLang();
-    setLang(current as "en" | "es" | "fr" | "pt");
-    const unsub = onLangChange((l: Lang) => setLang(l as "en" | "es" | "fr" | "pt"));
+    setLangState(current as Lang);
+    const unsub = onLangChange((l: Lang) => {
+      try { preloadCurrentLang(); } catch {}
+      setLangState(l);
+    });
     return () => {
-      try {
-        if (typeof unsub === "function") unsub();
-      } catch {}
+      try { if (typeof unsub === "function") unsub(); } catch {}
     };
   }, []);
 
+  // Hydrate emotions from backend and merge + de-dup with STOPGAP_EMOTIONS (with 2s timeout)
+  useEffect(() => {
+    let cancelled = false;
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 2000);
+
+    (async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/dhll/emotions", {
+          headers: { Accept: "application/json" },
+          signal: controller.signal,
+        });
+        const json = await res.json().catch(() => ({}));
+        const server = Array.isArray((json as any)?.emotions)
+          ? (json as any).emotions
+          : Array.isArray(json)
+          ? (json as string[])
+          : [];
+        const merged = Array.from(new Set([...STOPGAP_EMOTIONS, ...server]));
+        if (!cancelled) setEmotionOptions(merged);
+      } catch {
+        // keep STOPGAP_EMOTIONS
+      } finally {
+        window.clearTimeout(timeoutId);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
+
+  /** Compose client — ACTS-Y only (no pronoun/person/situation). */
   const compose = useMutation({
     mutationFn: async (input: TComposeRequest) => {
       const startedAt = Date.now();
-      const { data } = await api.post<TComposeResponse>("/dhll/compose", input);
+      const { data } = await api.post<TComposeResponse>(
+        "http://127.0.0.1:8000/dhll/compose",
+        input,
+        { headers: { "Content-Type": "application/json; charset=utf-8" } }
+      );
       const elapsed = Date.now() - startedAt;
       try {
         localStorage.setItem("jf:lastResponseMs", String(elapsed));
@@ -86,134 +180,127 @@ export default function Home() {
       } catch {}
       return data;
     },
-    onSuccess: () => {
-      try {
-        document
-          .getElementById("prayer-output")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      } catch {}
-    },
   });
 
-  const sections = normalizeSections(compose.data);
+  /** NEW: auto-clear output whenever language changes */
+  useEffect(() => {
+    compose.reset();
+    setClearNonce((n) => n + 1);
+
+    const doTop = () => {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+        document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+        document.body?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+      } catch {
+        window.scrollTo(0, 0);
+      }
+      requestAnimationFrame(() => {
+        try {
+          window.scrollTo(0, 0);
+          (document.scrollingElement as any)?.scrollTo(0, 0);
+          (document.body as any)?.scrollTo(0, 0);
+        } catch {}
+      });
+    };
+    setTimeout(doTop, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
+  const sections = normalizeSections(compose.data, lang);
+  const anchor = (compose.data as any)?.anchor;
+  const closing = (compose.data as any)?.closing || "";
+  const footer = (compose.data as any)?.footer || "";
+
+  // Localized title used in both on-screen header and copy text
+  const copyTitle =
+    sections.length > 0
+      ? t("output.prayerFor", lang).replace(
+          "{{emotion}}",
+          labelForEmotion(emotion, lang).toLocaleLowerCase(lang)
+        )
+      : tl("output.prayer");
+
   const prayerBase =
     compose.data && (compose.data as any).prayer
       ? String((compose.data as any).prayer)
-      : sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n");
-  const fullPrayer = `${prayerBase}\n\n${ATTRIBUTION}`;
-  const anchor = (compose.data as any)?.anchor;
-  const topics = getTopics();
+      : sections.map((s: any) => `${sectionLabel(String(s.title), lang)}\n${s.content}`).join("\n\n");
+
+  const anchorBlock =
+    anchor && (anchor?.reference || anchor?.text)
+      ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${anchor.text ? `\n${anchor.text}` : ""}`
+      : "";
+
+  // Include copy title + closing + footer in the copied text
+  const fullPrayer = [copyTitle, prayerBase, anchorBlock, closing, footer, ATTRIBUTION]
+    .filter(Boolean)
+    .join("\n\n");
+
   const hasPrayer = sections.length > 0;
-  const hasOutput = hasPrayer || !!verse;
 
   return (
     <LanguageProvider>
       <main
         id="page-top"
-        className="p-3 md:p-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
+        className="p-3 md:p-4 pt-2 md:pt-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             const details = document.querySelector("details");
-            if (details && details.open) {
+            if (details && (details as HTMLDetailsElement).open) {
               details.removeAttribute("open");
             }
+          }
+          // Enter triggers compose
+          if (e.key === "Enter" && !compose.isPending) {
+            e.preventDefault();
+            compose.mutate({
+              emotion,
+              language: lang,
+              show_anchor: true, // always show anchor
+            } as any);
           }
         }}
         tabIndex={0}
       >
-        <header className="mb-4">
+        <header className="mb-1">
           <h1
             className="text-xl sm:text-2xl md:text-3xl font-semibold leading-tight text-center flex items-center justify-center gap-2 px-2"
             style={{ color: "var(--brand-gold)" }}
           >
-            <img
+            <Image
               src="/icons/praying-hands-gold.png"
               alt=""
               aria-hidden="true"
+              width={32}
+              height={32}
               className="h-8 w-8"
             />
-            Prayer Composer with The Holy Bible Scriptures
-            <img
+            {tl("page.title")}
+            <Image
               src="/open-bible-gold.png"
               alt=""
               aria-hidden="true"
+              width={32}
+              height={32}
               className="h-8 w-8"
             />
           </h1>
         </header>
 
-        <div className="grid gap-3 md:h-full grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-stretch">
+        {/* Grid uses items-start so Input (left) does NOT stretch to match Output height */}
+        <div className="grid gap-2 grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-start">
           {/* LEFT: form */}
-          <section className="border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[360px] flex flex-col">
-            <div
-              className="flex-1 min-h-0 space-y-3"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !compose.isPending) {
-                  e.preventDefault();
-                  compose.mutate({
-                    emotion,
-                    language: lang,
-                    pronoun_style: pronoun,
-                    person_name: personName ? toTitleCase(personName) : undefined,
-                    situation: normalizeSituation(situation) || undefined,
-                    show_anchor: showAnchor,
-                  });
-                }
-              }}
-            >
-              {/* Scripture topic + selector */}
-              <div>
-                <label htmlFor="topic" className="block text-sm font-medium mb-1">
-                  Scripture topic
-                </label>
-                <div className="flex items-center gap-2 flex-wrap w-full">
-                  <select
-                    id="topic"
-                    name="topic"
-                    aria-label="Scripture topic"
-                    autoComplete="off"
-                    className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    disabled={compose.isPending}
-                    aria-disabled={compose.isPending ? true : undefined}
-                  >
-                    {topics.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="inline-flex items-center justify-center rounded-lg bg-black text-white px-3 py-2 disabled:opacity-50 shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                    onClick={() => {
-                      setVerse(getNextNonRepeatingVerse(topic));
-                      setTimeout(() => {
-                        document.getElementById("prayer-output")?.scrollIntoView({
-                          behavior: 'smooth',
-                          block: 'start',
-                        });
-                      }, 0);
-                    }}
-                    disabled={compose.isPending}
-                    aria-disabled={compose.isPending ? true : undefined}
-                    title="Show a verse for the selected topic"
-                  >
-                    Show verse
-                  </button>
-                </div>
-              </div>
-
-              {/* Emotion */}
+          <section className="self-start border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[200px] flex flex-col">
+            <div className="space-y-3">
+              {/* Emotion (hydrated + stopgap) */}
               <div>
                 <label htmlFor="emotion" className="block text-sm font-medium mb-1">
-                  Emotion
+                  {tl("input.emotion")}
                 </label>
                 <select
                   id="emotion"
                   name="emotion"
-                  aria-label="Emotion"
+                  aria-label={tl("input.emotion")}
                   autoComplete="off"
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                   value={emotion}
@@ -221,105 +308,19 @@ export default function Home() {
                   disabled={compose.isPending}
                   aria-disabled={compose.isPending ? true : undefined}
                 >
-                  <option value="anxiety">anxiety</option>
-                  <option value="grief">grief</option>
-                  <option value="fear">fear</option>
-                  <option value="anger">anger</option>
-                  <option value="love">love</option>
-                  <option value="perseverance">perseverance</option>
-                  <option value="hope">hope</option>
-                  <option value="joy">joy</option>
-                  <option value="financial_trials">financial trials</option>
-                  <option value="relationship_trials">relationship trials</option>
-                  <option value="illness">illness</option>
-                  <option value="despair">despair</option>
+                  {emotionOptions.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {labelForEmotion(opt, lang)}
+                    </option>
+                  ))}
                 </select>
               </div>
 
-              {/* Pronoun style */}
-              <div>
-                <label htmlFor="pronoun-style" className="block text-sm font-medium mb-1">
-                  Pronoun style
-                </label>
-                <select
-                  id="pronoun-style"
-                  name="pronoun_style"
-                  aria-label="Pronoun style"
-                  autoComplete="off"
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                  value={pronoun}
-                  onChange={(e) => setPronoun(e.target.value as TComposeRequest["pronoun_style"])}
-                  disabled={compose.isPending}
-                  aria-disabled={compose.isPending ? true : undefined}
-                >
-                  <option value="i">I / me / my</option>
-                  <option value="we">We / us / our</option>
-                  <option value="he">He / him / his</option>
-                  <option value="she">She / her / her</option>
-                  <option value="they">They / them / their</option>
-                </select>
-              </div>
-
-              {/* Person name */}
-              <div>
-                <label htmlFor="person-name" className="block text-sm font-medium mb-1">
-                  Person name (optional)
-                </label>
-                <input
-                  id="person-name"
-                  name="person_name"
-                  type="text"
-                  aria-label="Person name"
-                  autoComplete="given-name"
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                  value={personName}
-                  onChange={(e) => setPersonName(e.target.value)}
-                  placeholder="e.g., John"
-                  disabled={compose.isPending}
-                  aria-disabled={compose.isPending ? true : undefined}
-                />
-              </div>
-
-              {/* Situation */}
-              <div>
-                <label htmlFor="situation" className="block text-sm font-medium mb-1">
-                  Situation (optional)
-                </label>
-                <input
-                  id="situation"
-                  name="situation"
-                  type="text"
-                  aria-label="Situation"
-                  autoComplete="off"
-                  className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
-                  value={situation}
-                  onChange={(e) => setSituation(e.target.value)}
-                  placeholder="e.g., upcoming surgery"
-                  disabled={compose.isPending}
-                  aria-disabled={compose.isPending ? true : undefined}
-                />
-              </div>
-
-              {/* Toggle + Compose row */}
+              {/* Compose row only */}
               <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <input
-                    id="show-anchor"
-                    name="show_anchor"
-                    type="checkbox"
-                    checked={showAnchor}
-                    onChange={(e) => setShowAnchor(e.target.checked)}
-                    disabled={compose.isPending}
-                    aria-disabled={compose.isPending ? true : undefined}
-                  />
-                  <label htmlFor="show-anchor" className="text-sm">
-                    Show anchor
-                  </label>
-                </div>
-
                 <button
-                  aria-label="Compose prayer"
-                  title="Compose prayer"
+                  aria-label={tl("a11y.compose")}
+                  title={tl("a11y.compose")}
                   className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                   disabled={compose.isPending}
                   aria-disabled={compose.isPending ? true : undefined}
@@ -329,11 +330,8 @@ export default function Home() {
                     compose.mutate({
                       emotion,
                       language: lang,
-                      pronoun_style: pronoun,
-                      person_name: personName ? toTitleCase(personName) : undefined,
-                      situation: normalizeSituation(situation) || undefined,
-                      show_anchor: showAnchor,
-                    })
+                      show_anchor: true, // always request anchor
+                    } as any)
                   }
                 >
                   {compose.isPending ? (
@@ -354,10 +352,10 @@ export default function Home() {
                         />
                         <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" />
                       </svg>
-                      Composing…
+                      {tl("composer.compose")}
                     </>
                   ) : (
-                    "Compose prayer"
+                    tl("composer.compose")
                   )}
                 </button>
               </div>
@@ -374,7 +372,34 @@ export default function Home() {
           <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] flex flex-col">
             {/* Non-sticky header */}
             <div className="mb-3 flex items-center justify-between border-b pb-2">
-              <h2 className="text-xl font-medium">Prayer</h2>
+              <h2 className="text-xl font-medium flex items-center justify-center gap-2">
+                {hasPrayer ? (
+                  <>
+                    <Image
+                      src="/icons/praying-hands-gold.png"
+                      alt=""
+                      aria-hidden="true"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                    />
+                    {t("output.prayerFor", lang).replace(
+                      "{{emotion}}",
+                      labelForEmotion(emotion, lang).toLocaleLowerCase(lang)
+                    )}
+                    <Image
+                      src="/open-bible-gold.png"
+                      alt=""
+                      aria-hidden="true"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                    />
+                  </>
+                ) : (
+                  tl("output.prayer")
+                )}
+              </h2>
             </div>
 
             {/* Content area */}
@@ -385,37 +410,41 @@ export default function Home() {
               aria-live="polite"
               aria-busy={compose.isPending ? true : undefined}
             >
-              {/* Scripture display (if selected) */}
-              {verse && (
-                <div className="rounded-md bg-[var(--header)]/20 border p-2">
-                  <div className="text-sm font-medium">Scripture</div>
-                  <div className="text-sm italic whitespace-pre-wrap">{verse.text}</div>
-                  <div className="text-xs mt-1">
-                    {verse.reference} ({verse.version})
-                  </div>
-                </div>
-              )}
-
               {(!compose.data || sections.length === 0) && (
-                <p className="text-gray-500 text-sm">No prayer yet.</p>
+                <p className="text-gray-500 text-sm">{tl("output.noPrayerYet")}</p>
               )}
 
               {sections.length > 0 && (
                 <>
                   {sections.map((s: any, idx: number) => (
                     <div key={idx}>
-                      <div className="font-semibold">{prettyTitle(String(s.title))}</div>
-                      <div className="whitespace-pre-wrap">{s.content}</div>
+                      <div className="font-semibold">{sectionLabel(String(s.title), lang)}</div>
+                      <div
+                        className="whitespace-pre-wrap"
+                        dangerouslySetInnerHTML={{
+                          __html: emphasizePersonalCueInline(String(s.content)),
+                        }}
+                      />
                     </div>
                   ))}
 
                   {anchor && (
                     <div className="border-t pt-3 text-sm">
-                      <div className="font-semibold">Anchor</div>
+                      <div className="font-semibold">{tl("output.scripture")}</div>
                       <div className="whitespace-pre-wrap">
-                        {anchor.ref}
-                        {anchor.text ? ` — ${anchor.text}` : ""}
+                        {anchor.reference}
+                        {anchor.version ? ` (${anchor.version})` : ""}
                       </div>
+                      {anchor.text && <div className="italic whitespace-pre-wrap mt-1">{anchor.text}</div>}
+                    </div>
+                  )}
+
+                  {/* CLOSING now same size as body (removed text-sm) */}
+                  {(closing || footer) && (
+                    <div className="-mt-4">
+                      {closing && <div className="whitespace-pre-wrap">{closing}</div>}
+                      {closing && footer && <div className="border-t my-2" />}
+                      {footer && <div className="text-xs text-gray-600">{footer}</div>}
                     </div>
                   )}
 
@@ -424,11 +453,11 @@ export default function Home() {
               )}
             </div>
 
-            {/* Footer with Copy button (always rendered, disabled until content exists) */}
+            {/* Footer with Copy/Clear */}
             <div className="mt-4 pt-2 border-t">
               <button
-                aria-label="Copy full prayer"
-                title="Copy full prayer"
+                aria-label={tl("a11y.copy")}
+                title={tl("a11y.copy")}
                 className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 disabled={!hasPrayer}
                 aria-controls="prayer-output"
@@ -441,45 +470,43 @@ export default function Home() {
                   } catch {}
                 }}
               >
-                {copied ? "Copied!" : "Copy"}
+                {copied ? tl("composer.copied") : tl("composer.copy")}
               </button>
               <button
-                aria-label="Clear prayer output"
-                title="Clear prayer output"
+                aria-label={tl("a11y.clear")}
+                title={tl("a11y.clear")}
                 className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 onClick={() => {
-                  // Clear both verse and composed output
-                  setVerse(null);
                   compose.reset();
                   setClearNonce((n) => n + 1);
 
                   // Defer + double-pass to defeat WebView timing quirks
                   const doTop = () => {
                     try {
-                      window.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
-                      document.body?.scrollTo({ top: 0, left: 0, behavior: 'instant' as ScrollBehavior });
+                      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                      document.body?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
                     } catch {
                       window.scrollTo(0, 0);
                     }
                     requestAnimationFrame(() => {
                       try {
                         window.scrollTo(0, 0);
-                        document.scrollingElement?.scrollTo(0, 0);
-                        document.body?.scrollTo(0, 0);
+                        (document.scrollingElement as any)?.scrollTo(0, 0);
+                        (document.body as any)?.scrollTo(0, 0);
                       } catch {}
                     });
                   };
                   setTimeout(doTop, 0);
                 }}
-                disabled={!hasOutput}
-                aria-disabled={!hasOutput ? true : undefined}
+                disabled={!hasPrayer}
+                aria-disabled={!hasPrayer ? true : undefined}
               >
-                Clear
+                {tl("composer.clear")}
               </button>
 
               <div id="copy-status" role="status" aria-live="polite" className="sr-only">
-                {copied ? "Copied to clipboard" : ""}
+                {copied ? tl("composer.copied") : ""}
               </div>
             </div>
           </section>

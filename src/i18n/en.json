@@ -1,22 +1,18 @@
 {
   "_meta": { "lang": "en", "name": "English" },
-
   "site.name": "JirehFaith",
   "nav.home": "Home",
   "nav.about": "About",
   "nav.donate": "Donate",
   "nav.techInfo": "Tech Info",
-
   "hero.title": "JIREH FAITH",
   "hero.tagline": "When life speaks, let God’s Word answer.",
-
   "composer.placeholder": "Describe your situation or select a circumstance…",
   "composer.compose": "Compose Prayer",
   "composer.clear": "Clear",
   "composer.copy": "Copy",
   "composer.copied": "Copied!",
   "composer.generatedIn": "Generated in: {{lang}}",
-
   "donate.title": "Support JirehFaith",
   "donate.lead": "Choose a provider below to make a donation. Thank you for fueling this ministry.",
   "donate.stripe": "Donate with Stripe",
@@ -25,7 +21,6 @@
   "donate.googlepay": "Donate with Google Pay",
   "donate.comingSoon": "(coming soon)",
   "donate.note": "If a button is disabled, that method isn’t available yet.",
-
   "about.title": "About JirehFaith",
   "about.p1": "At Jireh Faith, we believe that when life speaks — in joy, in sorrow, in fear, or in gratitude — the most powerful response comes from God’s Word.",
   "about.p2": "Rooted in the promise of Jehovah Jireh — “The Lord will provide” (Genesis 22:14) — JirehFaith is a prayer companion designed to bring Scripture into your everyday circumstances.",
@@ -47,13 +42,42 @@
   "about.blessing": "God’s Blessings be upon you always!",
   "about.cta.tech": "Tech Info",
   "about.cta.donate": "Donate",
-
   "tech.h": "Tech Info",
   "tech.p": "Details about the technology that powers JirehFaith.",
-
   "lang.selector.label": "Language",
   "lang.en": "English",
   "lang.es": "Spanish",
   "lang.fr": "French",
-  "lang.pt": "Portuguese"
+  "lang.pt": "Portuguese",
+  "page.title": "Prayer Composer with The Holy Bible Scriptures",
+  "input.emotion": "Emotion",
+  "emotion.anxiety": "Anxiety",
+  "emotion.grief": "Grief",
+  "emotion.fear": "Fear",
+  "emotion.anger": "Anger",
+  "emotion.love": "Love",
+  "emotion.perseverance": "Perseverance",
+  "emotion.hope": "Hope",
+  "emotion.joy": "Joy",
+  "emotion.financial_trials": "Financial trials",
+  "emotion.relationship_trials": "Relationship trials",
+  "emotion.illness": "Illness",
+  "emotion.despair": "Despair",
+  "emotion.peace": "Peace",
+  "emotion.success": "Success",
+  "emotion.protection": "Protection",
+  "output.prayer": "Prayer",
+  "output.prayerFor": "Prayer for {{emotion}}",
+  "output.noPrayerYet": "No prayer yet.",
+  "output.scripture": "Scripture",
+  "a11y.compose": "Compose prayer",
+  "a11y.copy": "Copy full prayer",
+  "a11y.clear": "Clear prayer output"
+,
+"acts.adoration": "Adoration",
+  "acts.confession": "Confession",
+  "acts.thanksgiving": "Thanksgiving",
+  "acts.supplication": "Supplication",
+  "acts.yielding": "Yielding",
+  "acts.yielding_listening": "Yielding / Listening"
 }
