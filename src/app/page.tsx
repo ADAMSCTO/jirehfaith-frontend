@@ -338,7 +338,13 @@ export default function Home() {
           <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] flex flex-col">
             {/* Non-sticky header */}
             <div className="mb-3 flex items-center justify-between border-b pb-2">
-              <h2 className="text-xl font-medium">{t("output.prayer")}</h2>
+              <h2 className="text-xl font-medium flex items-center justify-center gap-2">
+{hasPrayer ? (
+  <><img src="/icons/praying-hands-gold.png" alt="" aria-hidden="true" className="h-6 w-6" />
+  {t("output.prayerFor").replace("{{emotion}}", labelForEmotion(emotion).toLocaleLowerCase(lang))}
+  <img src="/open-bible-gold.png" alt="" aria-hidden="true" className="h-6 w-6" /></>
+) : t("output.prayer")}
+</h2>
             </div>
 
             {/* Content area (no auto-scroll here; main padding prevents header overlap) */}

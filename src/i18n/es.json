@@ -67,6 +67,7 @@
   "emotion.success": "Éxito",
   "emotion.protection": "Protección",
   "output.prayer": "Oración",
+  "output.prayerFor": "Oración por {{emotion}}",
   "output.noPrayerYet": "Aún no hay oración.",
   "output.scripture": "Escritura",
   "a11y.compose": "Componer oración",

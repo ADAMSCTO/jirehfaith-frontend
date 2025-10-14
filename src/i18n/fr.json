@@ -67,6 +67,7 @@
   "emotion.success": "Réussite",
   "emotion.protection": "Protection",
   "output.prayer": "Prière",
+  "output.prayerFor": "Prière pour {{emotion}}",
   "output.noPrayerYet": "Pas encore de prière.",
   "output.scripture": "Écriture",
   "a11y.compose": "Composer une prière",
