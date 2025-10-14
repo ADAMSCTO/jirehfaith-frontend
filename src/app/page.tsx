@@ -38,9 +38,7 @@ function normalizeSections(data: any, lang: Lang) {
   return [];
 }
 
-/**
- * Emphasize the parenthetical where users speak their situation/condition.
- */
+/** Emphasize the parenthetical where users speak their situation/condition. */
 function emphasizePersonalCueInline(s: string) {
   const safe = String(s ?? "")
     .replace(/&/g, "&amp;")
@@ -124,13 +122,11 @@ export default function Home() {
     const current = getLang();
     setLangState(current as Lang);
     const unsub = onLangChange((l: Lang) => {
-      preloadCurrentLang();
+      try { preloadCurrentLang(); } catch {}
       setLangState(l);
     });
     return () => {
-      try {
-        if (typeof unsub === "function") unsub();
-      } catch {}
+      try { if (typeof unsub === "function") unsub(); } catch {}
     };
   }, []);
 
@@ -186,6 +182,31 @@ export default function Home() {
     },
   });
 
+  /** NEW: auto-clear output whenever language changes */
+  useEffect(() => {
+    compose.reset();
+    setClearNonce((n) => n + 1);
+
+    const doTop = () => {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+        document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+        document.body?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+      } catch {
+        window.scrollTo(0, 0);
+      }
+      requestAnimationFrame(() => {
+        try {
+          window.scrollTo(0, 0);
+          (document.scrollingElement as any)?.scrollTo(0, 0);
+          (document.body as any)?.scrollTo(0, 0);
+        } catch {}
+      });
+    };
+    setTimeout(doTop, 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
+
   const sections = normalizeSections(compose.data, lang);
   const anchor = (compose.data as any)?.anchor;
   const closing = (compose.data as any)?.closing || "";
@@ -206,7 +227,7 @@ export default function Home() {
       : sections.map((s: any) => `${sectionLabel(String(s.title), lang)}\n${s.content}`).join("\n\n");
 
   const anchorBlock =
-    anchor && (anchor.reference || anchor.text)
+    anchor && (anchor?.reference || anchor?.text)
       ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${anchor.text ? `\n${anchor.text}` : ""}`
       : "";
 
@@ -381,7 +402,7 @@ export default function Home() {
               </h2>
             </div>
 
-            {/* Content area (no auto-scroll here; main padding prevents header overlap) */}
+            {/* Content area */}
             <div
               id="prayer-output"
               key={clearNonce}
@@ -418,8 +439,9 @@ export default function Home() {
                     </div>
                   )}
 
+                  {/* CLOSING now same size as body (removed text-sm) */}
                   {(closing || footer) && (
-                    <div className="text-sm -mt-4">
+                    <div className="-mt-4">
                       {closing && <div className="whitespace-pre-wrap">{closing}</div>}
                       {closing && footer && <div className="border-t my-2" />}
                       {footer && <div className="text-xs text-gray-600">{footer}</div>}

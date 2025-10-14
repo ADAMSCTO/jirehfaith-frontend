@@ -19,9 +19,9 @@ const isBrowser = typeof window !== "undefined";
 // Normalize any input (e.g., "fr-CA") to one of our supported langs
 function normalizeLang(input?: string | null): Lang {
   const raw = (input || "").toLowerCase();
-  if (SUPPORTED.includes(raw as Lang)) return raw as Lang;
+  if ((SUPPORTED as readonly string[]).includes(raw)) return raw as Lang;
   const iso2 = raw.split("-")[0] as Lang;
-  if (SUPPORTED.includes(iso2)) return iso2;
+  if ((SUPPORTED as readonly string[]).includes(iso2)) return iso2;
   return "en";
 }
 
@@ -73,17 +73,28 @@ const cache: Partial<Record<Lang, Dict>> = {};
 async function importDict(lang: Lang): Promise<Dict> {
   let raw: any;
   switch (lang) {
-    case "en": raw = (await import("../i18n/en.json")).default; break;
-    case "es": raw = (await import("../i18n/es.json")).default; break;
-    case "fr": raw = (await import("../i18n/fr.json")).default; break;
-    case "pt": raw = (await import("../i18n/pt.json")).default; break;
-    default:   raw = (await import("../i18n/en.json")).default; break;
+    case "en":
+      raw = (await import("../i18n/en.json")).default;
+      break;
+    case "es":
+      raw = (await import("../i18n/es.json")).default;
+      break;
+    case "fr":
+      raw = (await import("../i18n/fr.json")).default;
+      break;
+    case "pt":
+      raw = (await import("../i18n/pt.json")).default;
+      break;
+    default:
+      raw = (await import("../i18n/en.json")).default;
+      break;
   }
-    // Strip metadata without binding an unused variable
-  const rest: any = { ...(raw || {}) };
-  delete rest._meta;
 
-   const dict: Dict = Object.fromEntries(
+  // Strip metadata
+  const rest: Record<string, unknown> = { ...(raw || {}) };
+  delete (rest as any)._meta;
+
+  const dict: Dict = Object.fromEntries(
     Object.entries(rest).map(([k, v]) => [k, typeof v === "string" ? v : String(v)])
   );
   return dict;
@@ -93,7 +104,7 @@ async function importDict(lang: Lang): Promise<Dict> {
  * Ensure the dictionary for `lang` is loaded into cache.
  * Call this once (e.g., in a client effect) before reading strings.
  */
-export async function ensureLocale(lang: Lang) {
+export async function ensureLocale(lang: Lang): Promise<void> {
   const L = normalizeLang(lang);
   if (!cache[L]) {
     cache[L] = await importDict(L);
@@ -104,7 +115,11 @@ export async function ensureLocale(lang: Lang) {
  * Get a string synchronously from cache.
  * If not loaded yet, returns the key as a fallback.
  */
-export function t(key: string, lang?: Lang, vars?: Record<string, string | number>): string {
+export function t(
+  key: string,
+  lang?: Lang,
+  vars?: Record<string, string | number>
+): string {
   const L = normalizeLang(lang || getLang());
   const dict = cache[L];
   const template = dict?.[key] ?? key;
@@ -112,11 +127,16 @@ export function t(key: string, lang?: Lang, vars?: Record<string, string | numbe
 }
 
 /**
- * Convenience: Preload the current language dictionary.
- * Useful on app start (client) to avoid flashes of keys.
+ * Convenience: Preload the current language dictionary and eagerly
+ * warm the others to avoid race conditions on first switch.
  */
-export async function preloadCurrentLang() {
-  await ensureLocale(getLang());
+export async function preloadCurrentLang(): Promise<void> {
+  const L: Lang = getLang();
+  await ensureLocale(L);
+
+  const ALL: Lang[] = SUPPORTED;
+  const others: Lang[] = ALL.filter((x) => x !== L);
+  await Promise.allSettled(others.map((x: Lang) => ensureLocale(x)));
 }
 
 // --- Optional tiny event helper for components ------------------------------

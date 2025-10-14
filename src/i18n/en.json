@@ -73,4 +73,11 @@
   "a11y.compose": "Compose prayer",
   "a11y.copy": "Copy full prayer",
   "a11y.clear": "Clear prayer output"
+,
+"acts.adoration": "Adoration",
+  "acts.confession": "Confession",
+  "acts.thanksgiving": "Thanksgiving",
+  "acts.supplication": "Supplication",
+  "acts.yielding": "Yielding",
+  "acts.yielding_listening": "Yielding / Listening"
 }

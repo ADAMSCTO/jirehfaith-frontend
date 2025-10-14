@@ -18,7 +18,10 @@ export default function Header() {
     const current = getLang();
     setLangState(current);
     preloadCurrentLang();
-    const unsub = onLangChange((l) => setLangState(l));
+    const unsub = onLangChange((l) => {
+    preloadCurrentLang();
+    setLangState(l);
+  });
     return () => {
       try { unsub(); } catch {}
     };
