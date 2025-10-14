@@ -339,12 +339,33 @@ export default function Home() {
             {/* Non-sticky header */}
             <div className="mb-3 flex items-center justify-between border-b pb-2">
               <h2 className="text-xl font-medium flex items-center justify-center gap-2">
-{hasPrayer ? (
-  <><Image src="/icons/praying-hands-gold.png" alt="" aria-hidden="true" width={24} height={24} className="h-6 w-6" />
-  {t("output.prayerFor").replace("{{emotion}}", labelForEmotion(emotion).toLocaleLowerCase(lang))}
-  <Image src="/open-bible-gold.png" alt="" aria-hidden="true" width={24} height={24} className="h-6 w-6" /></>
-) : t("output.prayer")}
-</h2>
+                {hasPrayer ? (
+                  <>
+                    <Image
+                      src="/icons/praying-hands-gold.png"
+                      alt=""
+                      aria-hidden="true"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                    />
+                    {t("output.prayerFor").replace(
+                      "{{emotion}}",
+                      labelForEmotion(emotion).toLocaleLowerCase(lang)
+                    )}
+                    <Image
+                      src="/open-bible-gold.png"
+                      alt=""
+                      aria-hidden="true"
+                      width={24}
+                      height={24}
+                      className="h-6 w-6"
+                    />
+                  </>
+                ) : (
+                  t("output.prayer")
+                )}
+              </h2>
             </div>
 
             {/* Content area (no auto-scroll here; main padding prevents header overlap) */}
@@ -409,3 +430,54 @@ export default function Home() {
                 aria-describedby="copy-status"
                 onClick={async () => {
                   try {
+                    await navigator.clipboard.writeText(fullPrayer);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  } catch {}
+                }}
+              >
+                {copied ? t("composer.copied") : t("composer.copy")}
+              </button>
+              <button
+                aria-label={t("a11y.clear")}
+                title={t("a11y.clear")}
+                className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
+                onClick={() => {
+                  compose.reset();
+                  setClearNonce((n) => n + 1);
+
+                  // Defer + double-pass to defeat WebView timing quirks
+                  const doTop = () => {
+                    try {
+                      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                      document.scrollingElement?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                      document.body?.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior });
+                    } catch {
+                      window.scrollTo(0, 0);
+                    }
+                    requestAnimationFrame(() => {
+                      try {
+                        window.scrollTo(0, 0);
+                        (document.scrollingElement as any)?.scrollTo(0, 0);
+                        (document.body as any)?.scrollTo(0, 0);
+                      } catch {}
+                    });
+                  };
+                  setTimeout(doTop, 0);
+                }}
+                disabled={!hasPrayer}
+                aria-disabled={!hasPrayer ? true : undefined}
+              >
+                {t("composer.clear")}
+              </button>
+
+              <div id="copy-status" role="status" aria-live="polite" className="sr-only">
+                {copied ? t("composer.copied") : ""}
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </LanguageProvider>
+  );
+}
