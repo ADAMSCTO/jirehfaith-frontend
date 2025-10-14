@@ -188,6 +188,10 @@ export default function Home() {
 
   return (
     <LanguageProvider>
+      {/* NOTE:
+          - Top padding is intentionally small (pt-2 md:pt-4) to keep content close to the fixed header
+          - Do NOT remove without re-testing header overlap on scroll/growth
+      */}
       <main
         id="page-top"
         className="p-3 md:p-4 pt-2 md:pt-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
@@ -235,6 +239,7 @@ export default function Home() {
           </h1>
         </header>
 
+        {/* Grid uses items-start so Input (left) does NOT stretch to match Output height */}
         <div className="grid gap-2 grid-rows-[auto,1fr] md:grid-rows-1 md:grid-cols-2 items-start">
           {/* LEFT: form */}
           <section className="self-start border rounded-lg p-3 space-y-2 bg-white shadow-sm min-h-[200px] flex flex-col">
@@ -322,7 +327,7 @@ export default function Home() {
               <h2 className="text-xl font-medium">Prayer</h2>
             </div>
 
-            {/* Content area */}
+            {/* Content area (no auto-scroll here; main padding prevents header overlap) */}
             <div
               id="prayer-output"
               key={clearNonce}
