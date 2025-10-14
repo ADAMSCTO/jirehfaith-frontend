@@ -1,22 +1,19 @@
+
 {
   "_meta": { "lang": "es", "name": "Español" },
-
   "site.name": "JirehFaith",
   "nav.home": "Inicio",
   "nav.about": "Acerca de",
   "nav.donate": "Donar",
   "nav.techInfo": "Información Técnica",
-
   "hero.title": "JIREH FAITH",
   "hero.tagline": "Cuando la vida habla, deja que la Palabra de Dios responda.",
-
   "composer.placeholder": "Describe tu situación o selecciona una circunstancia…",
   "composer.compose": "Componer Oración",
   "composer.clear": "Limpiar",
   "composer.copy": "Copiar",
   "composer.copied": "¡Copiado!",
   "composer.generatedIn": "Generado en: {{lang}}",
-
   "donate.title": "Apoya a JirehFaith",
   "donate.lead": "Elige un proveedor abajo para hacer una donación. Gracias por impulsar este ministerio.",
   "donate.stripe": "Donar con Stripe",
@@ -25,7 +22,6 @@
   "donate.googlepay": "Donar con Google Pay",
   "donate.comingSoon": "(próximamente)",
   "donate.note": "Si un botón está deshabilitado, ese método aún no está disponible.",
-
   "about.title": "Acerca de JirehFaith",
   "about.p1": "En Jireh Faith creemos que cuando la vida habla — en alegría, en tristeza, en miedo o en gratitud — la respuesta más poderosa proviene de la Palabra de Dios.",
   "about.p2": "Arraigado en la promesa de Jehová Jireh — “El Señor proveerá” (Génesis 22:14) — JirehFaith es un compañero de oración diseñado para llevar la Escritura a tus circunstancias diarias.",
@@ -47,13 +43,18 @@
   "about.blessing": "¡Las bendiciones de Dios estén siempre contigo!",
   "about.cta.tech": "Información Técnica",
   "about.cta.donate": "Donar",
-
   "tech.h": "Información Técnica",
   "tech.p": "Detalles sobre la tecnología que impulsa JirehFaith.",
-
   "lang.selector.label": "Idioma",
   "lang.en": "Inglés",
   "lang.es": "Español",
   "lang.fr": "Francés",
-  "lang.pt": "Portugués"
+  "lang.pt": "Portugués",
+  "page.title": "Compositor de Oraciones con las Sagradas Escrituras",
+  "input.emotion": "Emoción",
+  "output.prayer": "Oración",
+  "output.noPrayerYet": "Aún no hay oración.",
+  "a11y.compose": "Componer oración",
+  "a11y.copy": "Copiar la oración completa",
+  "a11y.clear": "Limpiar la salida de la oración"
 }

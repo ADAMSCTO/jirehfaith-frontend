@@ -1,22 +1,19 @@
+
 {
   "_meta": { "lang": "pt", "name": "Português" },
-
   "site.name": "JirehFaith",
   "nav.home": "Início",
   "nav.about": "Sobre",
   "nav.donate": "Doar",
   "nav.techInfo": "Informações Técnicas",
-
   "hero.title": "JIREH FAITH",
   "hero.tagline": "Quando a vida fala, deixe a Palavra de Deus responder.",
-
   "composer.placeholder": "Descreva sua situação ou selecione uma circunstância…",
   "composer.compose": "Compor Oração",
   "composer.clear": "Limpar",
   "composer.copy": "Copiar",
   "composer.copied": "Copiado!",
   "composer.generatedIn": "Gerado em: {{lang}}",
-
   "donate.title": "Apoie o JirehFaith",
   "donate.lead": "Escolha um provedor abaixo para fazer uma doação. Obrigado por sustentar este ministério.",
   "donate.stripe": "Doar com Stripe",
@@ -25,7 +22,6 @@
   "donate.googlepay": "Doar com Google Pay",
   "donate.comingSoon": "(em breve)",
   "donate.note": "Se um botão estiver desabilitado, esse método ainda não está disponível.",
-
   "about.title": "Sobre o JirehFaith",
   "about.p1": "No Jireh Faith acreditamos que quando a vida fala — em alegria, tristeza, medo ou gratidão — a resposta mais poderosa vem da Palavra de Deus.",
   "about.p2": "Enraizado na promessa de Jeová Jireh — “O Senhor proverá” (Gênesis 22:14) — JirehFaith é um companheiro de oração projetado para trazer as Escrituras para suas circunstâncias diárias.",
@@ -47,13 +43,18 @@
   "about.blessing": "As bênçãos de Deus estejam sempre com você!",
   "about.cta.tech": "Informações Técnicas",
   "about.cta.donate": "Doar",
-
   "tech.h": "Informações Técnicas",
   "tech.p": "Detalhes sobre a tecnologia que impulsiona o JirehFaith.",
-
   "lang.selector.label": "Idioma",
   "lang.en": "Inglês",
   "lang.es": "Espanhol",
   "lang.fr": "Francês",
-  "lang.pt": "Português"
+  "lang.pt": "Português",
+  "page.title": "Compositor de Orações com as Sagradas Escrituras",
+  "input.emotion": "Emoção",
+  "output.prayer": "Oração",
+  "output.noPrayerYet": "Ainda não há oração.",
+  "a11y.compose": "Compor oração",
+  "a11y.copy": "Copiar a oração completa",
+  "a11y.clear": "Limpar a saída da oração"
 }

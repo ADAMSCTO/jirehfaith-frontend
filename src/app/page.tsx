@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
-import { getLang, onLangChange, preloadCurrentLang, type Lang } from "@/lib/i18n";
+import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 import { LanguageProvider } from "@/lib/LanguageContext";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
@@ -40,7 +40,7 @@ function normalizeSections(data: any) {
     }));
   }
   if (typeof raw === "string") {
-    return [{ title: "Prayer", content: raw }];
+    return [{ title: t("output.prayer"), content: raw }];
   }
   return [];
 }
@@ -61,6 +61,20 @@ function emphasizePersonalCueInline(s: string) {
   const pattern =
     /\(([^)]*(?:state your condition|condition|condici[oó]n|condi[cç][aã]o|situ[aã]?[cç][aã]o|situaci[oó]n|situ[aã]o|situation)[^)]*)\)/giu;
   return safe.replace(pattern, (_m, inner) => `<strong>(${inner})</strong>`);
+}
+
+/** Localized label for emotion IDs; falls back to title-cased ID when no key exists. */
+function labelForEmotion(id: string): string {
+  try {
+    const key = `emotion.${id}`;
+    const translated = t(key);
+    if (translated === key) {
+      return id.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+    }
+    return translated;
+  } catch {
+    return id.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
+  }
 }
 
 /** Stopgap list + hydration (from Mission 1) */
@@ -198,7 +212,7 @@ export default function Home() {
         onKeyDown={(e) => {
           if (e.key === "Escape") {
             const details = document.querySelector("details");
-            if (details && details.open) {
+            if (details && (details as HTMLDetailsElement).open) {
               details.removeAttribute("open");
             }
           }
@@ -227,7 +241,7 @@ export default function Home() {
               height={32}
               className="h-8 w-8"
             />
-            Prayer Composer with The Holy Bible Scriptures
+            {t("page.title")}
             <Image
               src="/open-bible-gold.png"
               alt=""
@@ -247,12 +261,12 @@ export default function Home() {
               {/* Emotion (hydrated + stopgap) */}
               <div>
                 <label htmlFor="emotion" className="block text-sm font-medium mb-1">
-                  Emotion
+                  {t("input.emotion")}
                 </label>
                 <select
                   id="emotion"
                   name="emotion"
-                  aria-label="Emotion"
+                  aria-label={t("input.emotion")}
                   autoComplete="off"
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                   value={emotion}
@@ -262,7 +276,7 @@ export default function Home() {
                 >
                   {emotionOptions.map((opt) => (
                     <option key={opt} value={opt}>
-                      {opt.replace(/_/g, " ")}
+                      {labelForEmotion(opt)}
                     </option>
                   ))}
                 </select>
@@ -271,8 +285,8 @@ export default function Home() {
               {/* Compose row only */}
               <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
                 <button
-                  aria-label="Compose prayer"
-                  title="Compose prayer"
+                  aria-label={t("a11y.compose")}
+                  title={t("a11y.compose")}
                   className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                   disabled={compose.isPending}
                   aria-disabled={compose.isPending ? true : undefined}
@@ -304,10 +318,10 @@ export default function Home() {
                         />
                         <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" />
                       </svg>
-                      Composing…
+                      {t("composer.compose")}
                     </>
                   ) : (
-                    "Compose prayer"
+                    t("composer.compose")
                   )}
                 </button>
               </div>
@@ -324,7 +338,7 @@ export default function Home() {
           <section className="border rounded-lg p-3 bg-white shadow-sm min-h-[360px] flex flex-col">
             {/* Non-sticky header */}
             <div className="mb-3 flex items-center justify-between border-b pb-2">
-              <h2 className="text-xl font-medium">Prayer</h2>
+              <h2 className="text-xl font-medium">{t("output.prayer")}</h2>
             </div>
 
             {/* Content area (no auto-scroll here; main padding prevents header overlap) */}
@@ -336,7 +350,7 @@ export default function Home() {
               aria-busy={compose.isPending ? true : undefined}
             >
               {(!compose.data || sections.length === 0) && (
-                <p className="text-gray-500 text-sm">No prayer yet.</p>
+                <p className="text-gray-500 text-sm">{t("output.noPrayerYet")}</p>
               )}
 
               {sections.length > 0 && (
@@ -381,8 +395,8 @@ export default function Home() {
             {/* Footer with Copy/Clear */}
             <div className="mt-4 pt-2 border-t">
               <button
-                aria-label="Copy full prayer"
-                title="Copy full prayer"
+                aria-label={t("a11y.copy")}
+                title={t("a11y.copy")}
                 className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 disabled={!hasPrayer}
                 aria-controls="prayer-output"
@@ -409,11 +423,11 @@ export default function Home() {
                   } catch {}
                 }}
               >
-                {copied ? "Copied!" : "Copy"}
+                {copied ? t("composer.copied") : t("composer.copy")}
               </button>
               <button
-                aria-label="Clear prayer output"
-                title="Clear prayer output"
+                aria-label={t("a11y.clear")}
+                title={t("a11y.clear")}
                 className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 onClick={() => {
                   compose.reset();
@@ -431,8 +445,8 @@ export default function Home() {
                     requestAnimationFrame(() => {
                       try {
                         window.scrollTo(0, 0);
-                        document.scrollingElement?.scrollTo(0, 0);
-                        document.body?.scrollTo(0, 0);
+                        (document.scrollingElement as any)?.scrollTo(0, 0);
+                        (document.body as any)?.scrollTo(0, 0);
                       } catch {}
                     });
                   };
@@ -441,11 +455,11 @@ export default function Home() {
                 disabled={!hasPrayer}
                 aria-disabled={!hasPrayer ? true : undefined}
               >
-                Clear
+                {t("composer.clear")}
               </button>
 
               <div id="copy-status" role="status" aria-live="polite" className="sr-only">
-                {copied ? "Copied to clipboard" : ""}
+                {copied ? t("composer.copied") : ""}
               </div>
             </div>
           </section>
