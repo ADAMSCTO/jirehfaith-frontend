@@ -13,16 +13,9 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com
 const ATTRIBUTION = `— Source: ${SITE_NAME} (${SITE_URL})`;
 
 /** ---------------- Utility helpers ---------------- */
-function prettyTitle(title: string) {
-  const key = String(title || "").replace(/_/g, " ").trim();
-  if (key.toLowerCase() === "yielding listening" || key.toLowerCase() === "yielding_listening") {
-    return "Yielding / Listening";
-  }
-  return key.replace(/\b\w/g, (ch) => ch.toUpperCase());
-}
 
 /** Normalize backend sections to an array */
-function normalizeSections(data: any) {
+function normalizeSections(data: any, lang: Lang) {
   const raw = (data as any)?.sections ?? (data as any)?.output ?? data;
 
   if (Array.isArray(raw)) {
@@ -40,18 +33,13 @@ function normalizeSections(data: any) {
     }));
   }
   if (typeof raw === "string") {
-    return [{ title: t("output.prayer"), content: raw }];
+    return [{ title: t("output.prayer", lang), content: raw }];
   }
   return [];
 }
 
 /**
- * Emphasize the parenthetical where users speak their situation/condition:
- *  - EN: (state your condition)
- *  - ES: (declara tu condición)
- *  - FR: (exprimez votre situation)
- *  - PT: (diga a sua condição)
- * Also tolerant of variants: situation/situación/situação, condición/condição, condition.
+ * Emphasize the parenthetical where users speak their situation/condition.
  */
 function emphasizePersonalCueInline(s: string) {
   const safe = String(s ?? "")
@@ -64,10 +52,10 @@ function emphasizePersonalCueInline(s: string) {
 }
 
 /** Localized label for emotion IDs; falls back to title-cased ID when no key exists. */
-function labelForEmotion(id: string): string {
+function labelForEmotion(id: string, lang: Lang): string {
   try {
     const key = `emotion.${id}`;
-    const translated = t(key);
+    const translated = t(key, lang);
     if (translated === key) {
       return id.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
     }
@@ -77,7 +65,26 @@ function labelForEmotion(id: string): string {
   }
 }
 
-/** Stopgap list + hydration (from Mission 1) */
+/** Localized ACTS-Y section titles (trim + robust normalization) */
+function sectionLabel(title: string, lang: Lang): string {
+  const raw = String(title || "");
+  const key = raw.trim().toLowerCase().replace(/[\s\/-]+/g, "_");
+  const map: Record<string,string> = {
+    adoration: "acts.adoration",
+    confession: "acts.confession",
+    thanksgiving: "acts.thanksgiving",
+    supplication: "acts.supplication",
+    yielding: "acts.yielding",
+    yielding_listening: "acts.yielding_listening",
+  };
+  const tkey = map[key];
+  if (tkey) {
+    const val = t(tkey, lang);
+    if (val !== tkey) return val;
+  }
+  return raw ? raw.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : raw;
+}
+
 const STOPGAP_EMOTIONS = [
   "anxiety",
   "grief",
@@ -103,8 +110,11 @@ export default function Home() {
 
   // ACTS-Y only UI
   const [copied, setCopied] = useState(false);
-  const [lang, setLang] = useState<"en" | "es" | "fr" | "pt">("en");
+  const [lang, setLangState] = useState<Lang>("en");
   const [clearNonce, setClearNonce] = useState(0);
+
+  // tiny translate helper bound to current lang
+  const tl = (key: string) => t(key, lang);
 
   // Keep page language in sync with global i18n (Header selector)
   useEffect(() => {
@@ -112,8 +122,11 @@ export default function Home() {
       preloadCurrentLang();
     } catch {}
     const current = getLang();
-    setLang(current as "en" | "es" | "fr" | "pt");
-    const unsub = onLangChange((l: Lang) => setLang(l as "en" | "es" | "fr" | "pt"));
+    setLangState(current as Lang);
+    const unsub = onLangChange((l: Lang) => {
+      preloadCurrentLang();
+      setLangState(l);
+    });
     return () => {
       try {
         if (typeof unsub === "function") unsub();
@@ -155,9 +168,7 @@ export default function Home() {
     };
   }, []);
 
-  /** Compose client — ACTS-Y only (no pronoun/person/situation).
-   *  NOTE: Removed auto scroll to avoid header overlap.
-   */
+  /** Compose client — ACTS-Y only (no pronoun/person/situation). */
   const compose = useMutation({
     mutationFn: async (input: TComposeRequest) => {
       const startedAt = Date.now();
@@ -173,28 +184,34 @@ export default function Home() {
       } catch {}
       return data;
     },
-    onSuccess: () => {
-      // intentionally no scrollIntoView to prevent sliding under fixed header
-    },
   });
 
-  const sections = normalizeSections(compose.data);
+  const sections = normalizeSections(compose.data, lang);
   const anchor = (compose.data as any)?.anchor;
   const closing = (compose.data as any)?.closing || "";
   const footer = (compose.data as any)?.footer || "";
 
+  // Localized title used in both on-screen header and copy text
+  const copyTitle =
+    sections.length > 0
+      ? t("output.prayerFor", lang).replace(
+          "{{emotion}}",
+          labelForEmotion(emotion, lang).toLocaleLowerCase(lang)
+        )
+      : tl("output.prayer");
+
   const prayerBase =
     compose.data && (compose.data as any).prayer
       ? String((compose.data as any).prayer)
-      : sections.map((s: any) => `${prettyTitle(String(s.title))}\n${s.content}`).join("\n\n");
+      : sections.map((s: any) => `${sectionLabel(String(s.title), lang)}\n${s.content}`).join("\n\n");
 
   const anchorBlock =
     anchor && (anchor.reference || anchor.text)
       ? `${anchor.reference ?? ""}${anchor.version ? ` (${anchor.version})` : ""}${anchor.text ? `\n${anchor.text}` : ""}`
       : "";
 
-  // Include closing + footer in the copied text
-  const fullPrayer = [prayerBase, anchorBlock, closing, footer, ATTRIBUTION]
+  // Include copy title + closing + footer in the copied text
+  const fullPrayer = [copyTitle, prayerBase, anchorBlock, closing, footer, ATTRIBUTION]
     .filter(Boolean)
     .join("\n\n");
 
@@ -202,10 +219,6 @@ export default function Home() {
 
   return (
     <LanguageProvider>
-      {/* NOTE:
-          - Top padding is intentionally small (pt-2 md:pt-4) to keep content close to the fixed header
-          - Do NOT remove without re-testing header overlap on scroll/growth
-      */}
       <main
         id="page-top"
         className="p-3 md:p-4 pt-2 md:pt-4 max-w-6xl mx-auto min-h-[calc(100dvh-64px)] overflow-x-hidden"
@@ -241,7 +254,7 @@ export default function Home() {
               height={32}
               className="h-8 w-8"
             />
-            {t("page.title")}
+            {tl("page.title")}
             <Image
               src="/open-bible-gold.png"
               alt=""
@@ -261,12 +274,12 @@ export default function Home() {
               {/* Emotion (hydrated + stopgap) */}
               <div>
                 <label htmlFor="emotion" className="block text-sm font-medium mb-1">
-                  {t("input.emotion")}
+                  {tl("input.emotion")}
                 </label>
                 <select
                   id="emotion"
                   name="emotion"
-                  aria-label={t("input.emotion")}
+                  aria-label={tl("input.emotion")}
                   autoComplete="off"
                   className="w-full border border-gray-300 rounded px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                   value={emotion}
@@ -276,7 +289,7 @@ export default function Home() {
                 >
                   {emotionOptions.map((opt) => (
                     <option key={opt} value={opt}>
-                      {labelForEmotion(opt)}
+                      {labelForEmotion(opt, lang)}
                     </option>
                   ))}
                 </select>
@@ -285,8 +298,8 @@ export default function Home() {
               {/* Compose row only */}
               <div className="mt-1 flex items-center justify-between gap-3 flex-wrap">
                 <button
-                  aria-label={t("a11y.compose")}
-                  title={t("a11y.compose")}
+                  aria-label={tl("a11y.compose")}
+                  title={tl("a11y.compose")}
                   className="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 disabled:opacity-50 w-full sm:w-auto shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                   disabled={compose.isPending}
                   aria-disabled={compose.isPending ? true : undefined}
@@ -318,10 +331,10 @@ export default function Home() {
                         />
                         <path d="M22 12a10 10 0 0 1-10 10" stroke="currentColor" strokeWidth="4" />
                       </svg>
-                      {t("composer.compose")}
+                      {tl("composer.compose")}
                     </>
                   ) : (
-                    t("composer.compose")
+                    tl("composer.compose")
                   )}
                 </button>
               </div>
@@ -349,9 +362,9 @@ export default function Home() {
                       height={24}
                       className="h-6 w-6"
                     />
-                    {t("output.prayerFor").replace(
+                    {t("output.prayerFor", lang).replace(
                       "{{emotion}}",
-                      labelForEmotion(emotion).toLocaleLowerCase(lang)
+                      labelForEmotion(emotion, lang).toLocaleLowerCase(lang)
                     )}
                     <Image
                       src="/open-bible-gold.png"
@@ -363,7 +376,7 @@ export default function Home() {
                     />
                   </>
                 ) : (
-                  t("output.prayer")
+                  tl("output.prayer")
                 )}
               </h2>
             </div>
@@ -377,14 +390,14 @@ export default function Home() {
               aria-busy={compose.isPending ? true : undefined}
             >
               {(!compose.data || sections.length === 0) && (
-                <p className="text-gray-500 text-sm">{t("output.noPrayerYet")}</p>
+                <p className="text-gray-500 text-sm">{tl("output.noPrayerYet")}</p>
               )}
 
               {sections.length > 0 && (
                 <>
                   {sections.map((s: any, idx: number) => (
                     <div key={idx}>
-                      <div className="font-semibold">{prettyTitle(String(s.title))}</div>
+                      <div className="font-semibold">{sectionLabel(String(s.title), lang)}</div>
                       <div
                         className="whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{
@@ -396,7 +409,7 @@ export default function Home() {
 
                   {anchor && (
                     <div className="border-t pt-3 text-sm">
-                      <div className="font-semibold">{t("output.scripture")}</div>
+                      <div className="font-semibold">{tl("output.scripture")}</div>
                       <div className="whitespace-pre-wrap">
                         {anchor.reference}
                         {anchor.version ? ` (${anchor.version})` : ""}
@@ -405,7 +418,6 @@ export default function Home() {
                     </div>
                   )}
 
-                  {/* Closing + Footer with separator BETWEEN them (no gap after Yielding) */}
                   {(closing || footer) && (
                     <div className="text-sm -mt-4">
                       {closing && <div className="whitespace-pre-wrap">{closing}</div>}
@@ -422,8 +434,8 @@ export default function Home() {
             {/* Footer with Copy/Clear */}
             <div className="mt-4 pt-2 border-t">
               <button
-                aria-label={t("a11y.copy")}
-                title={t("a11y.copy")}
+                aria-label={tl("a11y.copy")}
+                title={tl("a11y.copy")}
                 className="text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 disabled={!hasPrayer}
                 aria-controls="prayer-output"
@@ -436,11 +448,11 @@ export default function Home() {
                   } catch {}
                 }}
               >
-                {copied ? t("composer.copied") : t("composer.copy")}
+                {copied ? tl("composer.copied") : tl("composer.copy")}
               </button>
               <button
-                aria-label={t("a11y.clear")}
-                title={t("a11y.clear")}
+                aria-label={tl("a11y.clear")}
+                title={tl("a11y.clear")}
                 className="ml-2 text-sm rounded-md border px-3 py-1 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[var(--brand-blue)]"
                 onClick={() => {
                   compose.reset();
@@ -468,11 +480,11 @@ export default function Home() {
                 disabled={!hasPrayer}
                 aria-disabled={!hasPrayer ? true : undefined}
               >
-                {t("composer.clear")}
+                {tl("composer.clear")}
               </button>
 
               <div id="copy-status" role="status" aria-live="polite" className="sr-only">
-                {copied ? t("composer.copied") : ""}
+                {copied ? tl("composer.copied") : ""}
               </div>
             </div>
           </section>

@@ -72,5 +72,11 @@
   "output.scripture": "Écriture",
   "a11y.compose": "Composer une prière",
   "a11y.copy": "Copier la prière complète",
-  "a11y.clear": "Effacer le contenu de la prière"
+  "a11y.clear": "Effacer le contenu de la prière",
+  "acts.adoration": "Adoration",
+  "acts.confession": "Confession",
+  "acts.thanksgiving": "Action de grâces",
+  "acts.supplication": "Supplication",
+  "acts.yielding": "Se rendre",
+  "acts.yielding_listening": "Se rendre / Écouter"
 }

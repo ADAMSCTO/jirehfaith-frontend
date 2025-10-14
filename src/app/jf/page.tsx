@@ -1,6 +1,8 @@
+// src/app/jf/page.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
 const API_BASE =
   (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_BASE) ||
@@ -33,6 +35,38 @@ const STOPGAP_EMOTIONS = [
   "protection",
 ];
 
+/** Emphasize the parenthetical where users speak their situation/condition. */
+function emphasizePersonalCueInline(s: string) {
+  const safe = String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  const pattern =
+    /\(([^)]*(?:state your condition|condition|condici[oó]n|condi[cç][aã]o|situ[aã]?[cç][aã]o|situaci[oó]n|situ[aã]o|situation)[^)]*)\)/giu;
+  return safe.replace(pattern, (_m, inner) => `<strong>(${inner})</strong>`);
+}
+
+/** Localized ACTS-Y section titles (trim + robust normalization) */
+function sectionLabel(title: string, lang: Lang): string {
+  const raw = String(title || "");
+  const key = raw.trim().toLowerCase().replace(/[\s\/-]+/g, "_");
+  const map: Record<string, string> = {
+    adoration: "acts.adoration",
+    confession: "acts.confession",
+    thanksgiving: "acts.thanksgiving",
+    supplication: "acts.supplication",
+    yielding: "acts.yielding",
+    yielding_listening: "acts.yielding_listening",
+  };
+  const tkey = map[key];
+  if (tkey) {
+    const val = t(tkey, lang);
+    if (val !== tkey) return val;
+  }
+  // fallback: prettify whatever we received
+  return raw ? raw.replace(/[_-]+/g, " ").replace(/\b\w/g, (m) => m.toUpperCase()) : raw;
+}
+
 export default function JFTester() {
   const [health, setHealth] = useState<null | { ok: boolean; version?: string }>(null);
   const [checking, setChecking] = useState(false);
@@ -51,6 +85,26 @@ export default function JFTester() {
   const [busy, setBusy] = useState(false);
 
   const api = useMemo(() => (API_BASE || "").replace(/\/$/, ""), []);
+  const [lang, setLangState] = useState<Lang>("en");
+
+  // Sync with i18n language and eagerly preload locales to avoid races
+  useEffect(() => {
+    try {
+      preloadCurrentLang();
+    } catch {}
+    setLangState(getLang());
+    const unsub = onLangChange((L) => {
+      try {
+        preloadCurrentLang();
+      } catch {}
+      setLangState(L);
+    });
+    return () => {
+      try {
+        unsub?.();
+      } catch {}
+    };
+  }, []);
 
   // Health check
   useEffect(() => {
@@ -102,7 +156,7 @@ export default function JFTester() {
       const res = await fetch(`${api}/dhll/map`, {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
-        body: JSON.stringify({ emotion, language: "en" }),
+        body: JSON.stringify({ emotion, language: lang }),
       });
       const data = await res.json();
       if (data && typeof data === "object") setMapResult(data as MapResp);
@@ -125,7 +179,7 @@ export default function JFTester() {
         headers: { "Content-Type": "application/json; charset=utf-8" },
         body: JSON.stringify({
           emotion,
-          language: "en",
+          language: lang,              // <- send selected language
           pronoun_style: pronoun,
           person_name: personName || undefined,
           // IMPORTANT: situation intentionally NOT sent (Mission 1)
@@ -256,8 +310,15 @@ export default function JFTester() {
               <div className="space-y-2">
                 {Object.entries(composeResult.sections).map(([k, v]) => (
                   <div key={k}>
-                    <div className="text-sm font-semibold">{k}</div>
-                    <p className="text-sm">{v}</p>
+                    <div className="text-sm font-semibold">
+                      {sectionLabel(k, lang)}
+                    </div>
+                    <div
+                      className="text-sm whitespace-pre-wrap"
+                      dangerouslySetInnerHTML={{
+                        __html: emphasizePersonalCueInline(String(v)),
+                      }}
+                    />
                   </div>
                 ))}
               </div>
