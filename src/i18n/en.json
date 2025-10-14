@@ -53,6 +53,7 @@
   "input.emotion": "Emotion",
   "output.prayer": "Prayer",
   "output.noPrayerYet": "No prayer yet.",
+  "output.scripture": "Scripture",
   "a11y.compose": "Compose prayer",
   "a11y.copy": "Copy full prayer",
   "a11y.clear": "Clear prayer output"

@@ -54,6 +54,7 @@
   "input.emotion": "Émotion",
   "output.prayer": "Prière",
   "output.noPrayerYet": "Pas encore de prière.",
+  "output.scripture": "Écriture",
   "a11y.compose": "Composer une prière",
   "a11y.copy": "Copier la prière complète",
   "a11y.clear": "Effacer le contenu de la prière"

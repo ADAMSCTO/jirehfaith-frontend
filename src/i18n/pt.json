@@ -54,6 +54,7 @@
   "input.emotion": "Emoção",
   "output.prayer": "Oração",
   "output.noPrayerYet": "Ainda não há oração.",
+  "output.scripture": "Escritura",
   "a11y.compose": "Compor oração",
   "a11y.copy": "Copiar a oração completa",
   "a11y.clear": "Limpar a saída da oração"

@@ -369,7 +369,7 @@ export default function Home() {
 
                   {anchor && (
                     <div className="border-t pt-3 text-sm">
-                      <div className="font-semibold">Scripture</div>
+                      <div className="font-semibold">{t("output.scripture")}</div>
                       <div className="whitespace-pre-wrap">
                         {anchor.reference}
                         {anchor.version ? ` (${anchor.version})` : ""}
