@@ -1,8 +1,9 @@
 // src/lib/i18n.ts
-// Minimal i18n helper for JirehFaith (RC9)
+// Minimal i18n helper for JirehFaith (RC10)
 // - Supports EN/ES/FR/PT
 // - Persists choice in localStorage ("jf_lang")
 // - Lazy-loads JSON dictionaries (code-split)
+// - Flattens nested JSON into dot keys (about.title → "about.title")
 // - Safe on SSR (guards window access)
 
 export type Lang = "en" | "es" | "fr" | "pt";
@@ -66,9 +67,27 @@ export function setLang(lang: Lang) {
 
 const cache: Partial<Record<Lang, Dict>> = {};
 
+// Flatten nested JSON into dot-notation keys.
+// Example: { about: { title: "X" }, "about.p1": "Y" }
+// Result:  { "about.title": "X", "about.p1": "Y" }  (flat top-level wins)
+function flattenJSON(obj: Record<string, unknown>, prefix = ""): Dict {
+  const out: Dict = {};
+  for (const [k, v] of Object.entries(obj)) {
+    const key = prefix ? `${prefix}.${k}` : k;
+    if (v != null && typeof v === "object" && !Array.isArray(v)) {
+      Object.assign(out, flattenJSON(v as Record<string, unknown>, key));
+    } else if (typeof v === "string" || typeof v === "number" || typeof v === "boolean") {
+      out[key] = String(v);
+    }
+  }
+  return out;
+}
+
 /**
- * Dynamically import locale JSON and strip non-string metadata
- * so it matches Dict = Record<string, string>.
+ * Dynamically import locale JSON and produce a flat Dict.
+ * - Removes _meta
+ * - Flattens nested objects into "a.b.c" keys
+ * - If both nested and flat key variants exist, the *flat* top-level wins.
  */
 async function importDict(lang: Lang): Promise<Dict> {
   let raw: any;
@@ -94,10 +113,19 @@ async function importDict(lang: Lang): Promise<Dict> {
   const rest: Record<string, unknown> = { ...(raw || {}) };
   delete (rest as any)._meta;
 
-  const dict: Dict = Object.fromEntries(
-    Object.entries(rest).map(([k, v]) => [k, typeof v === "string" ? v : String(v)])
-  );
-  return dict;
+  // 1) Flatten nested structure
+  const nestedFlat = flattenJSON(rest);
+
+  // 2) Extract any existing flat keys at top level (containing a dot)
+  const topLevelFlat: Dict = {};
+  for (const [k, v] of Object.entries(rest)) {
+    if (k.includes(".") && (typeof v === "string" || typeof v === "number" || typeof v === "boolean")) {
+      topLevelFlat[k] = String(v);
+    }
+  }
+
+  // Merge so flat top-level keys override nested-derived ones
+  return { ...nestedFlat, ...topLevelFlat };
 }
 
 /**

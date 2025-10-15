@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Lint must be clean
+npm run lint || exit 1
+
+# Secret scan staged changes (skip gracefully if gitleaks isn't installed)
+if command -v gitleaks >/dev/null 2>&1; then
+  gitleaks protect --staged --no-banner || { echo "❌ Pre-commit checks failed"; exit 1; }
+else
+  echo "⚠️  gitleaks not found on PATH — skipping secrets scan. Install via Chocolatey: 'choco install gitleaks' or use a portable binary."
+fi

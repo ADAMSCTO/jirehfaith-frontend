@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint --max-warnings=0 \"src/**/*.{ts,tsx,js,jsx}\"",
+    "prepare": "husky"
   },
   "dependencies": {
     "@capacitor/android": "^7.4.3",
@@ -34,7 +35,15 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-security": "^3.0.1",
+    "gitleaks": "^1.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": ">=18.19"
   }
 }

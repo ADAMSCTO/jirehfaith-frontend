@@ -1,0 +1,14 @@
+# Frontend: ensure we’re in the repo root
+cd ~/jirehfaith-frontend
+
+# Install exactly the locked deps (safer audits), skip postinstall scripts
+npm ci --ignore-scripts
+
+# A1) Dependency security audit (prod-only)
+npm audit --omit=dev
+
+# A2) Inventory of outdated packages
+npm outdated
+
+# A3) Check Node/engine compatibility
+npx ls-engines

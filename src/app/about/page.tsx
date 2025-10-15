@@ -6,34 +6,34 @@ import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i
 // Embedded English fallback so About never shows raw keys, even if i18n loader fails
 const EN_ABOUT = {
   title: "About JirehFaith",
-  p1: "At Jireh Faith, we believe that when life speaks — in joy, in sorrow, in fear, or in gratitude — the most powerful response comes from God’s Word.",
-  p2: "Rooted in the promise of Jehovah Jireh — “The Lord will provide” (Genesis 22:14) — JirehFaith is a prayer companion designed to bring Scripture into your everyday circumstances.",
+  p1: "When life speaks—in joy, sorrow, fear, or gratitude—the most faithful answer is found in God’s Word. JirehFaith is a prayer companion that brings Scripture into everyday circumstances.",
+  p2: "Rooted in the promise of Jehovah Jireh—“The Lord will provide” (Genesis 22:14)—JirehFaith helps believers respond to real situations with Scripture-woven prayers that draw us back to God’s presence and provision.",
   mission: {
     h: "Our Mission",
-    p: "To provide personalized, Scripture-based prayers that meet people where they are, offering comfort, encouragement, and hope — pointing back to God’s faithfulness.",
+    p: "To provide personalized, Scripture-woven prayers that meet people where they are—offering comfort, encouragement, and hope—while pointing back to God’s unfailing faithfulness.",
   },
   how: {
     h: "How It Works",
-    "1": "Share Your Need: Select or describe your circumstance.",
-    "2": "Scripture Speaks: JirehFaith finds Bible passages reflecting your situation.",
-    "3": "Prayer is Formed: A heartfelt prayer is generated, rooted in the Word.",
+    "1": "Share Your Need: Select your circumstance (emotion).",
+    "2": "Personalize: Pause at “state your condition” and speak directly to God about what you’re facing.",
+    "3": "Scripture Speaks: JirehFaith finds Bible passages that speak into your situation."
   },
   unique: {
     h: "What Makes JirehFaith Unique",
-    "1": "Scripture First — every prayer anchored in the Bible.",
-    "2": "Emotionally Attuned — powered by DHLL for human sensitivity.",
-    "3": "Multi-Language — English, French, Spanish, Portuguese.",
-    "4": "Accessible for All — free daily prayers; subscriptions and donations sustain the mission.",
+    "1": "Scripture First — Every prayer is anchored in the Bible.",
+    "2": "Emotionally Attuned — Powered by the Default Human Logic Layer (DHLL) to reflect real human experiences with sensitivity.",
+    "3": "Multilingual — Available in English, Spanish, French, and Portuguese.",
+    "4": "Accessible for All — Free daily prayers; subscriptions and donations help sustain the mission.",
   },
   vision: {
     h: "Our Vision",
-    p: "We envision a world where no believer prays alone.",
+    p: "No believer prays alone. With JirehFaith, every Christian carries a living reminder of God’s faithfulness, presence, and provision in every season.",
   },
   ministry: {
     h: "Our Ministry",
-    p: "Please support our ministry through Donation or Subscription. Share the Scriptures with others!",
+    p: "Support the work through Donations or Subscriptions—and share these Scriptures with others. God’s blessings be upon you always!",
   },
-  blessing: "God’s Blessings be upon you always!",
+  blessing: "God’s blessings be upon you always!",
   cta: {
     tech: "Tech Info",
     donate: "Donate",
@@ -101,8 +101,6 @@ export default function AboutPage() {
         </li>
       </ol>
 
-      <p>{tt("about.vision.p")}</p>
-
       <h2 className="text-2xl font-semibold mt-6" style={{ color: "var(--brand-gold)" }}>
         {tt("about.unique.h")}
       </h2>
@@ -129,7 +127,7 @@ export default function AboutPage() {
         <a
           id="tech-info-cta"
           href="/tech-info/index.html"
-          className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition cursor-pointer"
+          className="inline-block rounded-lg border border-[var(--brand-gold)] px-4 py-2 text-[var(--brand-gold)] hover:bg-[var(--brand-gold)] hover:text-white transition cursor-pointer focus:outline focus:outline-2 focus:outline-offset-2 focus:outline-[var(--brand-gold)]"
           aria-label={tt("about.cta.tech")}
           title={tt("about.cta.tech")}
         >
