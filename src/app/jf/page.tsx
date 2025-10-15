@@ -3,6 +3,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
+import { sanitize } from "@/lib/sanitize";
 
 const API_BASE =
   (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_BASE) ||
@@ -316,7 +317,7 @@ export default function JFTester() {
                     <div
                       className="text-sm whitespace-pre-wrap"
                       dangerouslySetInnerHTML={{
-                        __html: emphasizePersonalCueInline(String(v)),
+                        __html: sanitize(emphasizePersonalCueInline(String(v))),
                       }}
                     />
                   </div>
