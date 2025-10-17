@@ -1,5 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
 
 echo "→ ESLint on staged files"
 npx lint-staged || exit 1
