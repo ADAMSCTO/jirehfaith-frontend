@@ -1,0 +1,27 @@
+{
+  "root": true,
+  "ignorePatterns": ["node_modules/", ".next/", "out/", "dist/", "build/"],
+  "extends": ["next/core-web-vitals"],
+  "plugins": ["security", "jsx-a11y"],
+  "rules": {
+    "react/no-dangerous-set-innerhtml": "error",
+    "react/jsx-no-target-blank": ["error", { "allowReferrer": false }],
+    "security/detect-object-injection": "off",
+    "security/detect-non-literal-fs-filename": "warn",
+    "security/detect-non-literal-regexp": "warn",
+    "security/detect-non-literal-require": "warn",
+    "security/detect-unsafe-regex": "warn",
+    "security/detect-buffer-noassert": "error",
+    "security/detect-child-process": "error",
+    "security/detect-disable-mustache-escape": "error",
+    "security/detect-eval-with-expression": "error",
+    "security/detect-new-buffer": "error",
+    "security/detect-no-csrf-before-method-override": "warn",
+    "security/detect-possible-timing-attacks": "warn",
+    "security/detect-pseudoRandomBytes": "warn",
+    "jsx-a11y/anchor-is-valid": "warn",
+    "jsx-a11y/no-autofocus": "warn",
+    "jsx-a11y/no-redundant-roles": "warn",
+    "jsx-a11y/aria-role": "warn"
+  }
+}

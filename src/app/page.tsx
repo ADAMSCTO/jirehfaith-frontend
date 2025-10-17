@@ -1,3 +1,4 @@
+// src/app/page.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,6 +8,7 @@ import { api } from "@/lib/api";
 import type { TComposeRequest, TComposeResponse } from "@/lib/schemas";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 import { LanguageProvider } from "@/lib/LanguageContext";
+import { sanitize } from "@/lib/sanitize";
 
 const SITE_NAME = process.env.NEXT_PUBLIC_APP_NAME || "JirehFaith";
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.jirehfaith.com";
@@ -422,7 +424,7 @@ export default function Home() {
                       <div
                         className="whitespace-pre-wrap"
                         dangerouslySetInnerHTML={{
-                          __html: emphasizePersonalCueInline(String(s.content)),
+                          __html: sanitize(emphasizePersonalCueInline(String(s.content))),
                         }}
                       />
                     </div>
