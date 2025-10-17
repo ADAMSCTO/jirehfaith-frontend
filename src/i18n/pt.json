@@ -13,6 +13,7 @@
   "composer.copy": "Copiar",
   "composer.copied": "Copiado!",
   "composer.generatedIn": "Gerado em: {{lang}}",
+
   "donate.title": "Apoie o JirehFaith",
   "donate.lead": "Escolha um provedor abaixo para fazer uma doação. Obrigado por sustentar este ministério.",
   "donate.stripe": "Doar com Stripe",
@@ -21,6 +22,14 @@
   "donate.googlepay": "Doar com Google Pay",
   "donate.comingSoon": "(em breve)",
   "donate.note": "Se um botão estiver desativado, esse meio ainda não está disponível.",
+  "donate.walletsNote": "Apple Pay / Google Pay disponíveis em dispositivos elegíveis no checkout.",
+  "donate.amountLabel": "Escolha um valor",
+  "donate.customAmount": "Ou insira um valor personalizado",
+  "donate.coverFees": "Adicionar um pequeno extra para cobrir as taxas de processamento",
+  "donate.processing": "Processando…",
+  "donate.openPaypal": "Abrir o PayPal",
+  "donate.paypalTemporarilyUnavailable": "O PayPal está temporariamente indisponível. Você ainda pode doar usando o link abaixo.",
+  "donate.receiptNote": "Um recibo será enviado por e-mail após o pagamento.",
 
   "about.title": "Sobre o JirehFaith",
   "about.p1": "Quando a vida fala—em alegria, dor, temor ou gratidão—a resposta mais fiel está na Palavra de Deus. JirehFaith é um companheiro de oração que leva a Escritura às circunstâncias do dia a dia.",

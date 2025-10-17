@@ -6,39 +6,39 @@ const nextConfig = {
   images: { unoptimized: true },
 
   async headers() {
-    // Tight Content Security Policy suitable for static export
-    // If you later load assets from a CDN, add it to the src lists below.
+    // DEV-friendly CSP so Next.js dev + local API + PayPal/Stripe work.
+    // In production, tighten these again (remove 'unsafe-*', restrict connect-src, etc).
+    const isDev = process.env.NODE_ENV !== "production";
+
     const csp = [
       "default-src 'self'",
-      "script-src 'self'",
-      "style-src 'self'",
-      "img-src 'self' data:",
+      // Allow eval/inline ONLY in dev to satisfy Next dev/runtime
+      `script-src 'self' https://www.paypal.com https://www.paypalobjects.com${isDev ? " 'unsafe-eval' 'unsafe-inline'" : ""}`,
+      // Allow inline styles in dev; prefer class names in prod
+      `style-src 'self'${isDev ? " 'unsafe-inline'" : ""}`,
+      // Images/fonts
+      "img-src 'self' data: https:",
       "font-src 'self' data:",
-      "connect-src 'self'",
+      // XHR/fetch/websocket targets
+      `connect-src 'self' http://127.0.0.1:8081 https://*.paypal.com https://*.paypalobjects.com${isDev ? " ws://localhost:3000 ws://127.0.0.1:3000" : ""}`,
+      // Embeds/frames for Stripe Checkout and PayPal buttons
+      "frame-src https://*.stripe.com https://*.paypal.com https://*.paypalobjects.com https://*.venmo.com",
       "frame-ancestors 'none'",
       "base-uri 'self'",
-      "form-action 'self'",
+      // Allow posting to Stripe/PayPal
+      "form-action 'self' https://checkout.stripe.com https://www.paypal.com",
       "object-src 'none'",
-      "upgrade-insecure-requests"
+      "upgrade-insecure-requests",
     ].join("; ");
 
     return [
       {
         source: "/:path*",
         headers: [
-          // Content Security Policy
           { key: "Content-Security-Policy", value: csp },
-
-          // MIME sniffing protection
           { key: "X-Content-Type-Options", value: "nosniff" },
-
-          // Clickjacking protection
           { key: "X-Frame-Options", value: "DENY" },
-
-          // Referrer policy (tighten later if desired)
           { key: "Referrer-Policy", value: "no-referrer-when-downgrade" },
-
-          // Restrict powerful browser features (adjust if you need any of these)
           {
             key: "Permissions-Policy",
             value: [
@@ -56,16 +56,14 @@ const nextConfig = {
               "payment=()",
               "picture-in-picture=(self)",
               "usb=()",
-              "xr-spatial-tracking=()"
-            ].join(", ")
+              "xr-spatial-tracking=()",
+            ].join(", "),
           },
-
-          // HSTS: safe when site is always served over HTTPS (recommended for prod)
-          { key: "Strict-Transport-Security", value: "max-age=15552000; includeSubDomains" }
-        ]
-      }
+          { key: "Strict-Transport-Security", value: "max-age=15552000; includeSubDomains" },
+        ],
+      },
     ];
-  }
+  },
 };
 
 module.exports = nextConfig;

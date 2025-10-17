@@ -1,0 +1,19 @@
+{
+  "donate": {
+    "title": "Support JirehFaith",
+    "lead": "Your gift helps us advance the Mission.",
+    "amountLabel": "Choose an amount",
+    "customAmount": "Or enter a custom amount",
+    "coverFees": "Add a little extra to cover processing fees",
+    "stripe": "Pay with Stripe",
+    "processing": "Processing…",
+    "paypal": "PayPal",
+    "paypalTemporarilyUnavailable": "PayPal is temporarily unavailable. You can still donate using the link below.",
+    "openPaypal": "Open PayPal",
+    "applepay": "Apple Pay",
+    "googlepay": "Google Pay",
+    "comingSoon": "coming soon",
+    "note": "Donations are processed securely. Thank you for your generosity!",
+    "receiptNote": "A receipt will be emailed to you after payment."
+  }
+}

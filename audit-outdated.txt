@@ -1,0 +1,18 @@
+Package                 Current    Wanted   Latest  Location                            Depended by          Package Type     Homepage
+@hookform/resolvers       5.2.1     5.2.2    5.2.2  node_modules/@hookform/resolvers    jirehfaith-frontend  dependencies     https://react-hook-form.com
+@sentry/nextjs          10.10.0   10.20.0  10.20.0  node_modules/@sentry/nextjs         jirehfaith-frontend  dependencies     https://github.com/getsentry/sentry-javascript/tree/master/packages/nextjs
+@tailwindcss/postcss     4.1.13    4.1.14   4.1.14  node_modules/@tailwindcss/postcss   jirehfaith-frontend  devDependencies  https://tailwindcss.com
+@tanstack/react-query    5.87.1    5.90.5   5.90.5  node_modules/@tanstack/react-query  jirehfaith-frontend  dependencies     https://tanstack.com/query
+@types/node            20.19.13  20.19.21   24.8.0  node_modules/@types/node            jirehfaith-frontend  devDependencies  https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/node
+@types/react            19.1.12    19.2.2   19.2.2  node_modules/@types/react           jirehfaith-frontend  devDependencies  https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react
+@types/react-dom         19.1.9    19.2.2   19.2.2  node_modules/@types/react-dom       jirehfaith-frontend  devDependencies  https://github.com/DefinitelyTyped/DefinitelyTyped/tree/master/types/react-dom
+eslint                   9.35.0    9.37.0   9.37.0  node_modules/eslint                 jirehfaith-frontend  devDependencies  https://eslint.org
+eslint-config-next       15.5.2    15.5.2   15.5.5  node_modules/eslint-config-next     jirehfaith-frontend  devDependencies  https://nextjs.org/docs/app/api-reference/config/eslint
+lucide-react            0.542.0   0.542.0  0.546.0  node_modules/lucide-react           jirehfaith-frontend  dependencies     https://lucide.dev
+next                     15.5.2    15.5.2   15.5.5  node_modules/next                   jirehfaith-frontend  dependencies     https://nextjs.org
+react                    19.1.0    19.1.0   19.2.0  node_modules/react                  jirehfaith-frontend  dependencies     https://react.dev/
+react-dom                19.1.0    19.1.0   19.2.0  node_modules/react-dom              jirehfaith-frontend  dependencies     https://react.dev/
+react-hook-form          7.62.0    7.65.0   7.65.0  node_modules/react-hook-form        jirehfaith-frontend  dependencies     https://react-hook-form.com
+tailwindcss              4.1.13    4.1.14   4.1.14  node_modules/tailwindcss            jirehfaith-frontend  devDependencies  https://tailwindcss.com
+typescript                5.9.2     5.9.3    5.9.3  node_modules/typescript             jirehfaith-frontend  devDependencies  https://www.typescriptlang.org/
+zod                       4.1.5    4.1.12   4.1.12  node_modules/zod                    jirehfaith-frontend  dependencies     https://zod.dev
