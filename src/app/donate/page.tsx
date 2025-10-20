@@ -10,7 +10,6 @@ declare global {
     [key: string]: any;
     NEXT_PUBLIC_API_BASE?: string;
     NEXT_PUBLIC_PAYPAL_CLIENT_ID?: string;
-    NEXT_PUBLIC_PAYPAL_LINK?: string;
   }
 }
 
@@ -24,11 +23,6 @@ const RAW_PAYPAL_CLIENT_ID =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID) ||
   (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_PAYPAL_CLIENT_ID) ||
   "";
-
-const PAYPAL_FALLBACK_LINK =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PAYPAL_LINK) ||
-  (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_PAYPAL_LINK) ||
-  "https://www.paypal.com/donate";
 
 const PP_NS = "paypal_jf";
 
@@ -118,8 +112,6 @@ export default function DonatePage() {
   // PayPal
   const [ppClientId, setPpClientId] = useState<string>("");
   const [paypalReady, setPaypalReady] = useState<boolean>(false);
-  const [paypalUnavailable, setPaypalUnavailable] = useState<boolean>(false);
-  const [ppReloads, setPpReloads] = useState<number>(0);
   const paypalDivRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -179,20 +171,12 @@ export default function DonatePage() {
   }
 
   // ---------------- PayPal Smart Buttons (static SDK via next/script) ---------
-  // When SDK loads (via Script onLoad), check namespace and mark ready
   function handlePaypalSdkLoad() {
     try {
       const ns = (window as any)[PP_NS];
-      if (ns?.Buttons) {
-        setPaypalReady(true);
-        setPaypalUnavailable(false);
-      } else {
-        setPaypalReady(false);
-        setPaypalUnavailable(true);
-      }
+      setPaypalReady(!!ns?.Buttons);
     } catch {
       setPaypalReady(false);
-      setPaypalUnavailable(true);
     }
   }
 
@@ -203,6 +187,10 @@ export default function DonatePage() {
     const btn = (window as any)[PP_NS].Buttons({
       style: { layout: "horizontal", height: 42, label: "donate", shape: "rect", color: "gold", tagline: false },
       createOrder: async () => {
+        // Guard tiny amounts
+        if (effectiveCents < 50) {
+          throw new Error("Minimum amount is $0.50");
+        }
         const res = await fetch(api("/donate/paypal/create"), {
           method: "POST",
           headers: { "Content-Type": "application/json; charset=utf-8" },
@@ -239,32 +227,6 @@ export default function DonatePage() {
     } catch {}
   }, [paypalReady, effectiveCents]);
 
-  // ---- UI helpers ------------------------------------------------------------
-  function presetClasses(isActive: boolean) {
-    if (isActive) {
-      return [
-        "rounded-xl px-3 py-2 text-sm font-semibold",
-        "border border-[var(--brand-gold)]",
-        "bg-[var(--brand-gold)] text-black",
-        "shadow-sm",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--brand-gold)] focus-visible:ring-offset-black",
-        "transition",
-      ].join(" ");
-    }
-    return [
-      "rounded-xl px-3 py-2 text-sm",
-      "border border-white/25 text-white",
-      "bg-white/5 hover:bg-white/10",
-      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/50 focus-visible:ring-offset-black",
-      "transition",
-    ].join(" ");
-  }
-
-  const devDebug =
-    process.env.NODE_ENV !== "production"
-      ? `PayPal SDK ready: ${paypalReady ? "yes" : "no"} | retries: ${ppReloads}`
-      : "";
-
   // Build SDK src when we have a client id
   const paypalSdkSrc =
     ppClientId
@@ -281,10 +243,7 @@ export default function DonatePage() {
           data-namespace={PP_NS}
           crossOrigin="anonymous"
           onLoad={handlePaypalSdkLoad}
-          onError={() => {
-            setPaypalReady(false);
-            setPaypalUnavailable(true);
-          }}
+          onError={() => setPaypalReady(false)}
         />
       )}
 
@@ -311,7 +270,13 @@ export default function DonatePage() {
                   setAmountCents(p.cents);
                   setCustomAmount("");
                 }}
-                className={presetClasses(isActive)}
+                className={[
+                  "rounded-xl px-3 py-2 text-sm",
+                  isActive
+                    ? "font-semibold border border-[var(--brand-gold)] bg-[var(--brand-gold)] text-black shadow-sm"
+                    : "border border-white/25 text-white bg-white/5 hover:bg-white/10",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/50 focus-visible:ring-offset-black transition",
+                ].join(" ")}
                 aria-pressed={isActive ? "true" : "false"}
               >
                 {p.label}
@@ -330,7 +295,7 @@ export default function DonatePage() {
             placeholder="$"
             value={customAmount}
             onChange={(e) => setCustomAmount(e.target.value)}
-            className="flex-1 rounded-lg bg-black/20 border border-white/25 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            className="flex-1 rounded-lg bg.black/20 bg-black/20 border border-white/25 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             aria-label={tr("donate.customAmount", lang, "Or enter a custom amount")}
           />
         </div>
@@ -374,67 +339,16 @@ export default function DonatePage() {
           {tr("donate.walletsNote", lang, "Apple Pay / Google Pay available on eligible devices at checkout.")}
         </p>
 
-        {/* PayPal (static SDK) */}
-        {paypalReady ? (
-          <div className="max-w-xl">
-            <div
-              ref={paypalDivRef}
-              className="rounded-xl border border-white/25 px-3 py-2 bg-white/5 flex items-center justify-center"
-              aria-disabled={effectiveCents < 50 ? "true" : undefined}
-            />
+        {/* PayPal (Smart Buttons only; no fallback/extra buttons) */}
+        <div className="max-w-xl">
+          <div
+            ref={paypalDivRef}
+            className="rounded-xl border border-white/25 px-3 py-2 bg-white/5 flex items-center justify-center min-h-[56px]"
+            aria-busy={!paypalReady ? "true" : undefined}
+          >
+            {!paypalReady && <span className="text-sm opacity-80">{tr("donate.loadingPaypal", lang, "Loading PayPal…")}</span>}
           </div>
-        ) : (
-          <div className="rounded-xl border border-white/25 bg-white/5 p-3 max-w-xl">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-sm font-medium">{tr("donate.paypal", lang, "PayPal")}</span>
-              <span aria-hidden="true" className="flex items-center gap-2 opacity-90">
-                <svg viewBox="0 0 72 24" width="72" height="24">
-                  <rect width="72" height="24" rx="4" fill="#003087" />
-                  <text x="50%" y="60%" textAnchor="middle" fontSize="11" fill="#ffffff" fontFamily="Arial, Helvetica, sans-serif">
-                    PayPal
-                  </text>
-                </svg>
-              </span>
-            </div>
-
-            <p className="text-xs opacity-80 mb-3">
-              {paypalUnavailable
-                ? tr(
-                    "donate.paypalTemporarilyUnavailable",
-                    lang,
-                    "PayPal is temporarily unavailable. You can still donate using the link below.",
-                  )
-                : "Loading PayPal… If it takes too long, please use the link below or try again."}
-            </p>
-
-            <div className="flex items-center gap-2">
-              <a
-                href={PAYPAL_FALLBACK_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/60 focus-visible:ring-offset-black"
-                aria-label="Open PayPal donation page"
-              >
-                {tr("donate.openPaypal", lang, "Open PayPal")}
-              </a>
-              <button
-                type="button"
-                onClick={() => {
-                  // Re-run readiness check (e.g., if SDK finished after first render)
-                  setPaypalUnavailable(false);
-                  setPaypalReady(!!(window as any)[PP_NS]?.Buttons);
-                  setPpReloads((n) => n + 1);
-                }}
-                className="inline-flex items-center rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/60 focus-visible:ring-offset-black"
-                aria-label="Retry loading PayPal"
-              >
-                Retry PayPal
-              </button>
-            </div>
-
-            {devDebug && <p className="text-[10px] mt-2 opacity-60 select-all">{devDebug}</p>}
-          </div>
-        )}
+        </div>
       </div>
 
       {!!error && (
@@ -452,3 +366,4 @@ export default function DonatePage() {
     </main>
   );
 }
+
