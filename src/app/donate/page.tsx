@@ -1,73 +1,453 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { PAYMENT_LINKS } from "@/lib/payments";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Script from "next/script";
 import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i18n";
 
-type Btn = {
-  key: "stripe" | "paypal" | "applepay" | "googlepay";
-};
+declare global {
+  interface Window {
+    paypal?: any;
+    [key: string]: any;
+    NEXT_PUBLIC_API_BASE?: string;
+    NEXT_PUBLIC_PAYPAL_CLIENT_ID?: string;
+    NEXT_PUBLIC_PAYPAL_LINK?: string;
+  }
+}
 
-const BUTTONS: Btn[] = [
-  { key: "stripe" },
-  { key: "paypal" },
-  { key: "applepay" },
-  { key: "googlepay" }
+// ---- Config -----------------------------------------------------------------
+const API_BASE =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE) ||
+  (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_API_BASE) ||
+  "http://127.0.0.1:8081";
+
+const RAW_PAYPAL_CLIENT_ID =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID) ||
+  (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_PAYPAL_CLIENT_ID) ||
+  "";
+
+const PAYPAL_FALLBACK_LINK =
+  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PAYPAL_LINK) ||
+  (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_PAYPAL_LINK) ||
+  "https://www.paypal.com/donate";
+
+const PP_NS = "paypal_jf";
+
+// Build absolute URL to backend
+function api(path: string) {
+  return `${String(API_BASE).replace(/\/$/, "")}${path}`;
+}
+
+// Safe i18n helper
+function tr(key: string, lang: Lang, fallback: string) {
+  const val = t(key, lang);
+  if (!val) return fallback;
+  return val === key ? fallback : val;
+}
+
+type Preset = { label: string; cents: number };
+const PRESETS: Preset[] = [
+  { label: "$5", cents: 500 },
+  { label: "$10", cents: 1000 },
+  { label: "$25", cents: 2500 },
+  { label: "$50", cents: 5000 },
 ];
 
+// ---- Brand Icons -------------------------------------------------------------
+function VisaIcon() {
+  return (
+    <svg viewBox="0 0 48 32" width="48" height="32" aria-label="Visa" role="img" className="inline-block align-[-0.2em] mx-1">
+      <rect width="48" height="32" rx="4" fill="#1a1f71" />
+      <text x="50%" y="58%" textAnchor="middle" fontSize="12" fill="#ffffff" fontFamily="Arial, Helvetica, sans-serif">VISA</text>
+    </svg>
+  );
+}
+function MastercardIcon() {
+  return (
+    <svg viewBox="0 0 48 32" width="48" height="32" aria-label="Mastercard" role="img" className="inline-block align-[-0.2em] mx-1">
+      <rect width="48" height="32" rx="4" fill="#ffffff" />
+      <circle cx="20" cy="16" r="8" fill="#eb001b" />
+      <circle cx="28" cy="16" r="8" fill="#f79e1b" />
+      <path d="M24 8 a8 8 0 0 0 0 16 a8 8 0 0 0 0 -16z" fill="#ff5f00" />
+    </svg>
+  );
+}
+function AmexIcon() {
+  return (
+    <svg viewBox="0 0 48 32" width="48" height="32" aria-label="American Express" role="img" className="inline-block align-[-0.2em] mx-1">
+      <rect width="48" height="32" rx="4" fill="#2e77bc" />
+      <text x="50%" y="58%" textAnchor="middle" fontSize="9.5" fill="#ffffff" fontFamily="Arial, Helvetica, sans-serif">AMEX</text>
+    </svg>
+  );
+}
+function DiscoverIcon() {
+  return (
+    <svg viewBox="0 0 48 32" width="48" height="32" aria-label="Discover" role="img" className="inline-block align-[-0.2em] mx-1">
+      <rect width="48" height="32" rx="4" fill="#000000" />
+      <circle cx="31" cy="16" r="8.5" fill="#f47216" />
+    </svg>
+  );
+}
+function StripeLockup() {
+  return (
+    <span className="ml-3 flex items-center gap-2" aria-hidden="true">
+      <svg viewBox="0 0 60 24" width="60" height="24" className="opacity-90">
+        <title>Stripe</title>
+        <rect width="60" height="24" rx="4" fill="#635bff" />
+        <text x="50%" y="60%" textAnchor="middle" fontSize="11" fill="#ffffff" fontFamily="Arial, Helvetica, sans-serif">
+          STRIPE
+        </text>
+      </svg>
+      <VisaIcon />
+      <MastercardIcon />
+      <AmexIcon />
+      <DiscoverIcon />
+    </span>
+  );
+}
+
+// -----------------------------------------------------------------------------
+
 export default function DonatePage() {
-  const [lang, setLangState] = useState<Lang>("en");
+  const [lang, setLang] = useState<Lang>("en");
+  const [amountCents, setAmountCents] = useState<number>(PRESETS[0].cents);
+  const [customAmount, setCustomAmount] = useState<string>("");
+  const [coverFees, setCoverFees] = useState<boolean>(true);
+  const [busy, setBusy] = useState<boolean>(false);
+  const [error, setError] = useState<string>("");
+
+  // PayPal
+  const [ppClientId, setPpClientId] = useState<string>("");
+  const [paypalReady, setPaypalReady] = useState<boolean>(false);
+  const [paypalUnavailable, setPaypalUnavailable] = useState<boolean>(false);
+  const [ppReloads, setPpReloads] = useState<number>(0);
+  const paypalDivRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const current = getLang();
-    setLangState(current);
+    setLang(current);
     preloadCurrentLang();
-    const unsub = onLangChange((l) => setLangState(l));
+    const unsub = onLangChange((l) => setLang(l));
     return () => unsub();
   }, []);
 
+  // Decide PayPal client id (support sandbox via ?pp=sandbox or #pp=sandbox)
+  useEffect(() => {
+    let cid = RAW_PAYPAL_CLIENT_ID;
+    try {
+      const u = new URL(window.location.href);
+      if (u.searchParams.get("pp") === "sandbox" || u.hash.includes("pp=sandbox")) {
+        cid = "sb";
+      }
+    } catch {}
+    setPpClientId(cid);
+  }, []);
+
+  // Effective amount in cents (preset or custom)
+  const effectiveCents = useMemo(() => {
+    const v = customAmount.trim();
+    if (!v) return amountCents;
+    const normalized = v.replace(/[$,\s]/g, "");
+    const num = Number(normalized);
+    if (!isFinite(num) || num <= 0) return amountCents;
+    return Math.round(num * 100);
+  }, [customAmount, amountCents]);
+
+  // ---------------- Stripe Checkout ----------------
+  async function handleStripeCheckout() {
+    try {
+      setBusy(true);
+      setError("");
+      const res = await fetch(api("/donate/stripe/checkout"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json; charset=utf-8" },
+        body: JSON.stringify({
+          amount_cents: effectiveCents,
+          currency: "usd",
+          cover_fees: coverFees,
+          metadata: { source: "donation-page" },
+        }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (!data?.url) throw new Error("Missing Checkout URL");
+      window.location.href = data.url;
+    } catch (e: any) {
+      setError(typeof e?.message === "string" ? e.message : "Checkout failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // ---------------- PayPal Smart Buttons (static SDK via next/script) ---------
+  // When SDK loads (via Script onLoad), check namespace and mark ready
+  function handlePaypalSdkLoad() {
+    try {
+      const ns = (window as any)[PP_NS];
+      if (ns?.Buttons) {
+        setPaypalReady(true);
+        setPaypalUnavailable(false);
+      } else {
+        setPaypalReady(false);
+        setPaypalUnavailable(true);
+      }
+    } catch {
+      setPaypalReady(false);
+      setPaypalUnavailable(true);
+    }
+  }
+
+  // Render buttons once ready
+  useEffect(() => {
+    if (!paypalReady || !(window as any)[PP_NS]?.Buttons || !paypalDivRef.current) return;
+
+    const btn = (window as any)[PP_NS].Buttons({
+      style: { layout: "horizontal", height: 42, label: "donate", shape: "rect", color: "gold", tagline: false },
+      createOrder: async () => {
+        const res = await fetch(api("/donate/paypal/create"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json; charset=utf-8" },
+          body: JSON.stringify({ amount_cents: effectiveCents, currency: "USD", metadata: { source: "donation-page" } }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        return data?.id;
+      },
+      onApprove: async (data: any) => {
+        try {
+          setBusy(true);
+          setError("");
+          const res = await fetch(api("/donate/paypal/capture"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+            body: JSON.stringify({ order_id: data?.orderID }),
+          });
+          if (!res.ok) throw new Error(await res.text());
+          const out = await res.json();
+          alert(`Thank you! ${(out?.method || "paypal").toUpperCase()} ${out?.currency} ${(out?.amount_cents ?? 0) / 100} captured.`);
+        } catch (e: any) {
+          setError(typeof e?.message === "string" ? e.message : "PayPal capture failed");
+        } finally {
+          setBusy(false);
+        }
+      },
+      onError: (err: any) => setError(`PayPal error: ${String(err?.message || err)}`),
+    });
+
+    try {
+      paypalDivRef.current.innerHTML = "";
+      btn.render(paypalDivRef.current);
+    } catch {}
+  }, [paypalReady, effectiveCents]);
+
+  // ---- UI helpers ------------------------------------------------------------
+  function presetClasses(isActive: boolean) {
+    if (isActive) {
+      return [
+        "rounded-xl px-3 py-2 text-sm font-semibold",
+        "border border-[var(--brand-gold)]",
+        "bg-[var(--brand-gold)] text-black",
+        "shadow-sm",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[var(--brand-gold)] focus-visible:ring-offset-black",
+        "transition",
+      ].join(" ");
+    }
+    return [
+      "rounded-xl px-3 py-2 text-sm",
+      "border border-white/25 text-white",
+      "bg-white/5 hover:bg-white/10",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/50 focus-visible:ring-offset-black",
+      "transition",
+    ].join(" ");
+  }
+
+  const devDebug =
+    process.env.NODE_ENV !== "production"
+      ? `PayPal SDK ready: ${paypalReady ? "yes" : "no"} | retries: ${ppReloads}`
+      : "";
+
+  // Build SDK src when we have a client id
+  const paypalSdkSrc =
+    ppClientId
+      ? `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(ppClientId)}&components=buttons&currency=USD&intent=capture&commit=true&enable-funding=venmo&disable-funding=card,paylater`
+      : "";
+
   return (
     <main className="mx-auto max-w-2xl px-4 py-10 text-white">
-      <h1
-        className="text-3xl font-bold mb-3"
-        style={{ color: "var(--brand-gold)" }}
-      >
-        {t("donate.title", lang)}
+      {/* Static PayPal SDK (namespaced) */}
+      {paypalSdkSrc && (
+        <Script
+          src={paypalSdkSrc}
+          strategy="afterInteractive"
+          data-namespace={PP_NS}
+          crossOrigin="anonymous"
+          onLoad={handlePaypalSdkLoad}
+          onError={() => {
+            setPaypalReady(false);
+            setPaypalUnavailable(true);
+          }}
+        />
+      )}
+
+      <h1 className="text-3xl font-bold mb-3 text-[var(--brand-gold)]">
+        {tr("donate.title", lang, "Support JirehFaith")}
       </h1>
 
-      <p className="text-base mb-6">
-        {t("donate.lead", lang)}
-      </p>
+      <p className="text-base mb-6">{tr("donate.lead", lang, "Your gift helps us advance the Mission.")}</p>
 
+      {/* Amounts */}
+      <section className="mb-5">
+        <label className="block text-sm mb-2">
+          {tr("donate.amountLabel", lang, "Choose an amount")}
+        </label>
+
+        <div className="flex flex-wrap gap-2 mb-3">
+          {PRESETS.map((p) => {
+            const isActive = effectiveCents === p.cents && !customAmount;
+            return (
+              <button
+                key={p.label}
+                type="button"
+                onClick={() => {
+                  setAmountCents(p.cents);
+                  setCustomAmount("");
+                }}
+                className={presetClasses(isActive)}
+                aria-pressed={isActive ? "true" : "false"}
+              >
+                {p.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <label className="text-sm" htmlFor="custom">
+            {tr("donate.customAmount", lang, "Or enter a custom amount")}
+          </label>
+          <input
+            id="custom"
+            inputMode="decimal"
+            placeholder="$"
+            value={customAmount}
+            onChange={(e) => setCustomAmount(e.target.value)}
+            className="flex-1 rounded-lg bg-black/20 border border-white/25 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            aria-label={tr("donate.customAmount", lang, "Or enter a custom amount")}
+          />
+        </div>
+
+        <div className="mt-3 flex items-center gap-2">
+          <input
+            id="cover"
+            type="checkbox"
+            checked={coverFees}
+            onChange={(e) => setCoverFees(e.target.checked)}
+            className="h-4 w-4"
+          />
+          <label htmlFor="cover" className="text-sm">
+            {tr("donate.coverFees", lang, "Add a little extra to cover processing fees")}
+          </label>
+        </div>
+      </section>
+
+      {/* Buttons */}
       <div className="grid gap-3">
-        {BUTTONS.map(({ key }) => {
-          const raw = PAYMENT_LINKS[key];
-          const enabled = raw && raw !== "#";
-          const href = enabled ? raw : undefined;
+        {/* Stripe */}
+        <button
+          onClick={handleStripeCheckout}
+          disabled={busy || effectiveCents < 50}
+          className={[
+            "w-full rounded-xl border px-4 py-3 text-left transition",
+            "flex items-center justify-between",
+            "border-white/25 bg-white/5 hover:bg-white/10 hover:shadow",
+            busy || effectiveCents < 50 ? "opacity-60 cursor-not-allowed" : "",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/60 focus-visible:ring-offset-black",
+          ].join(" ")}
+          aria-busy={busy ? "true" : undefined}
+          aria-label="Donate with Stripe"
+        >
+          <span>{busy ? tr("donate.processing", lang, "Processing…") : tr("donate.stripe", lang, "Pay with Stripe")}</span>
+          <StripeLockup />
+        </button>
 
-          return (
-            <a
-              key={key}
-              href={href}
-              onClick={enabled ? undefined : (e) => e.preventDefault()}
-              aria-disabled={enabled ? undefined : "true"}
-              className={
-                "w-full rounded-xl border px-4 py-3 text-left transition " +
-                (enabled ? "hover:shadow" : "opacity-60 cursor-not-allowed")
-              }
-              target={enabled ? "_blank" : undefined}
-              rel={enabled ? "noopener noreferrer" : undefined}
-              title={enabled ? undefined : t("donate.note", lang)}
-            >
-              {t(`donate.${key}`, lang)}
-              {!enabled ? " " + t("donate.comingSoon", lang) : ""}
-            </a>
-          );
-        })}
+        {/* Wallets note under Stripe */}
+        <p className="text-xs opacity-80 -mt-1">
+          {tr("donate.walletsNote", lang, "Apple Pay / Google Pay available on eligible devices at checkout.")}
+        </p>
+
+        {/* PayPal (static SDK) */}
+        {paypalReady ? (
+          <div className="max-w-xl">
+            <div
+              ref={paypalDivRef}
+              className="rounded-xl border border-white/25 px-3 py-2 bg-white/5 flex items-center justify-center"
+              aria-disabled={effectiveCents < 50 ? "true" : undefined}
+            />
+          </div>
+        ) : (
+          <div className="rounded-xl border border-white/25 bg-white/5 p-3 max-w-xl">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-sm font-medium">{tr("donate.paypal", lang, "PayPal")}</span>
+              <span aria-hidden="true" className="flex items-center gap-2 opacity-90">
+                <svg viewBox="0 0 72 24" width="72" height="24">
+                  <rect width="72" height="24" rx="4" fill="#003087" />
+                  <text x="50%" y="60%" textAnchor="middle" fontSize="11" fill="#ffffff" fontFamily="Arial, Helvetica, sans-serif">
+                    PayPal
+                  </text>
+                </svg>
+              </span>
+            </div>
+
+            <p className="text-xs opacity-80 mb-3">
+              {paypalUnavailable
+                ? tr(
+                    "donate.paypalTemporarilyUnavailable",
+                    lang,
+                    "PayPal is temporarily unavailable. You can still donate using the link below.",
+                  )
+                : "Loading PayPal… If it takes too long, please use the link below or try again."}
+            </p>
+
+            <div className="flex items-center gap-2">
+              <a
+                href={PAYPAL_FALLBACK_LINK}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/60 focus-visible:ring-offset-black"
+                aria-label="Open PayPal donation page"
+              >
+                {tr("donate.openPaypal", lang, "Open PayPal")}
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  // Re-run readiness check (e.g., if SDK finished after first render)
+                  setPaypalUnavailable(false);
+                  setPaypalReady(!!(window as any)[PP_NS]?.Buttons);
+                  setPpReloads((n) => n + 1);
+                }}
+                className="inline-flex items-center rounded-lg border border-white/25 bg-white/10 px-3 py-2 text-sm hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-white/60 focus-visible:ring-offset-black"
+                aria-label="Retry loading PayPal"
+              >
+                Retry PayPal
+              </button>
+            </div>
+
+            {devDebug && <p className="text-[10px] mt-2 opacity-60 select-all">{devDebug}</p>}
+          </div>
+        )}
       </div>
 
+      {!!error && (
+        <p className="mt-4 text-sm text-red-300" role="alert">
+          {error}
+        </p>
+      )}
+
       <p className="text-xs mt-4 opacity-80">
-        {t("donate.note", lang)}
+        {tr("donate.note", lang, "Donations are processed securely. Thank you for your generosity!")}
+      </p>
+      <p className="text-xs mt-1 opacity-80">
+        {tr("donate.receiptNote", lang, "A receipt will be emailed to you after payment.")}
       </p>
     </main>
   );
