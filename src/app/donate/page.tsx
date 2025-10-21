@@ -295,7 +295,7 @@ export default function DonatePage() {
             placeholder="$"
             value={customAmount}
             onChange={(e) => setCustomAmount(e.target.value)}
-            className="flex-1 rounded-lg bg.black/20 bg-black/20 border border-white/25 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+            className="flex-1 rounded-lg bg-black/20 border border-white/25 px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-white/60"
             aria-label={tr("donate.customAmount", lang, "Or enter a custom amount")}
           />
         </div>
