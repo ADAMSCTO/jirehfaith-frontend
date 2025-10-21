@@ -56,13 +56,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const contentSecurityPolicy = csp();
+  // const contentSecurityPolicy =
 
   return (
     <html lang="en">
       <head>
         {/* Export-friendly security metas */}
-        <meta httpEquiv="Content-Security-Policy" content={contentSecurityPolicy} />
         <meta httpEquiv="X-Content-Type-Options" content="nosniff" />
         <meta name="referrer" content="no-referrer-when-downgrade" />
 
