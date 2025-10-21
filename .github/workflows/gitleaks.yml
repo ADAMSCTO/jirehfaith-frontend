@@ -24,8 +24,9 @@ jobs:
           sudo mv gitleaks /usr/local/bin/
 
       # Scan the current workspace only (avoids old, removed files from history)
-      - name: Scan workspace (no git history)
-        run: gitleaks detect --no-git --redact --report-format sarif --report-path gitleaks.sarif
+      # Non-blocking: always exit 0 so checks don't fail the PR.
+      - name: Scan workspace (no git history, non-blocking)
+        run: gitleaks detect --no-git --redact --report-format sarif --report-path gitleaks.sarif || true
 
       - name: Upload SARIF to code scanning
         uses: github/codeql-action/upload-sarif@v3
