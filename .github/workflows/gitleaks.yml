@@ -1,0 +1,33 @@
+# .github/workflows/gitleaks.yml
+name: Security – Gitleaks
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install gitleaks
+        run: |
+          VER=8.24.3
+          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v${VER}/gitleaks_${VER}_linux_x64.tar.gz \
+          | tar xz
+          sudo mv gitleaks /usr/local/bin/
+
+      # Scan the current workspace only (avoids old, removed files from history)
+      - name: Scan workspace (no git history)
+        run: gitleaks detect --no-git --redact --report-format sarif --report-path gitleaks.sarif
+
+      - name: Upload SARIF to code scanning
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: gitleaks.sarif
