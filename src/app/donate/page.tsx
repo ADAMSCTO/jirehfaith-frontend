@@ -1,3 +1,4 @@
+// === DONATE PAGE v3 — FULL FILE (Stripe USD + PayPal redirect) ===
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -154,7 +155,7 @@ export default function DonatePage() {
         headers: { "Content-Type": "application/json; charset=utf-8" },
         body: JSON.stringify({
           amount_cents: effectiveCents,
-          currency: "usd",
+          currency: "USD", // <-- normalized to uppercase
           cover_fees: coverFees,
           metadata: { source: "donation-page" },
         }),
@@ -210,8 +211,9 @@ export default function DonatePage() {
             body: JSON.stringify({ order_id: data?.orderID }),
           });
           if (!res.ok) throw new Error(await res.text());
-          const out = await res.json();
-          alert(`Thank you! ${(out?.method || "paypal").toUpperCase()} ${out?.currency} ${(out?.amount_cents ?? 0) / 100} captured.`);
+          // On success, take donor to the Thank You page
+          await res.json(); // consume JSON (optional)
+          window.location.href = "/donate/thank-you";
         } catch (e: any) {
           setError(typeof e?.message === "string" ? e.message : "PayPal capture failed");
         } finally {
@@ -366,4 +368,4 @@ export default function DonatePage() {
     </main>
   );
 }
-
+// === END DONATE PAGE v3 ===
