@@ -1,4 +1,4 @@
-// === DONATE PAGE v3 — FULL FILE (Stripe USD + PayPal redirect) ===
+// === DONATE PAGE v3 — FULL FILE (Stripe USD + PayPal + Venmo) ===
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -15,13 +15,15 @@ declare global {
 }
 
 // ---- Config -----------------------------------------------------------------
+// IMPORTANT: do NOT guard process.env with `typeof process` in client components.
+// Next replaces NEXT_PUBLIC_* at build-time. We keep a window fallback for safety.
 const API_BASE =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE) ||
+  (process.env.NEXT_PUBLIC_API_BASE as string | undefined) ||
   (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_API_BASE) ||
   "http://127.0.0.1:8081";
 
 const RAW_PAYPAL_CLIENT_ID =
-  (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID) ||
+  (process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID as string | undefined) ||
   (typeof window !== "undefined" && (window as any).NEXT_PUBLIC_PAYPAL_CLIENT_ID) ||
   "";
 
@@ -155,7 +157,7 @@ export default function DonatePage() {
         headers: { "Content-Type": "application/json; charset=utf-8" },
         body: JSON.stringify({
           amount_cents: effectiveCents,
-          currency: "USD", // <-- normalized to uppercase
+          currency: "USD",
           cover_fees: coverFees,
           metadata: { source: "donation-page" },
         }),
@@ -211,8 +213,7 @@ export default function DonatePage() {
             body: JSON.stringify({ order_id: data?.orderID }),
           });
           if (!res.ok) throw new Error(await res.text());
-          // On success, take donor to the Thank You page
-          await res.json(); // consume JSON (optional)
+          await res.json();
           window.location.href = "/donate/thank-you";
         } catch (e: any) {
           setError(typeof e?.message === "string" ? e.message : "PayPal capture failed");
