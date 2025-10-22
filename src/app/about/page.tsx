@@ -6,8 +6,8 @@ import { getLang, onLangChange, preloadCurrentLang, t, type Lang } from "@/lib/i
 // Embedded English fallback so About never shows raw keys, even if i18n loader fails
 const EN_ABOUT = {
   title: "About JirehFaith",
-  p1: "When life speaks—in joy, sorrow, fear, or gratitude—the most faithful answer is found in God’s Word. JirehFaith is a prayer companion that brings Scripture into everyday circumstances.",
-  p2: "Rooted in the promise of Jehovah Jireh—“The Lord will provide” (Genesis 22:14)—JirehFaith helps believers respond to real situations with Scripture-woven prayers that draw us back to God’s presence and provision.",
+  p1: "When life speaks—in joy, sorrow, fear, or gratitude—the most powerful answer comes from God’s Word. Rooted in the promise of Jehovah-Jireh—“The Lord will provide” (Genesis 22:14)—JirehFaith is a prayer companion that brings Scripture into everyday circumstances.",
+  p2: "JirehFaith Prayer Composer generates personalized, Scripture-anchored prayers using A-C-T-S-Y (Adoration, Confession/Contrition, Thanksgiving, Supplication, Yielding), following the pattern in the Lord’s Prayer, -Our Father- (Matthew 6:9–13) with Adoration (“hallowed be Your name,” v9) → Confession (“forgive us…,” v12) → Thanksgiving (modeled throughout Scripture) → Supplication (“give us… deliver us,” vv11,13) → Yielding (“Your will be done,” v10). Each prayer includes relevant Bible verses so you receive encouragement and grow deeper in God’s Word.",
   mission: {
     h: "Our Mission",
     p: "To provide personalized, Scripture-woven prayers that meet people where they are—offering comfort, encouragement, and hope—while pointing back to God’s unfailing faithfulness.",
@@ -16,7 +16,8 @@ const EN_ABOUT = {
     h: "How It Works",
     "1": "Share Your Need: Select your circumstance (emotion).",
     "2": "Personalize: Pause at “state your condition” and speak directly to God about what you’re facing.",
-    "3": "Scripture Speaks: JirehFaith finds Bible passages that speak into your situation."
+    "3": "Scripture Speaks: JirehFaith finds Bible passages that speak into your situation.",
+    "4": "Prayer Is Formed: A heartfelt prayer is composed—rooted in the Word—to inspire faith and trust in God’s provision."
   },
   unique: {
     h: "What Makes JirehFaith Unique",
@@ -27,7 +28,7 @@ const EN_ABOUT = {
   },
   vision: {
     h: "Our Vision",
-    p: "No believer prays alone. With JirehFaith, every Christian carries a living reminder of God’s faithfulness, presence, and provision in every season.",
+    p: "No believer prays alone. With JirehFaith, every Christian carries Scripture-inspired prayer in their pocket—a reminder of God’s faithfulness, presence, and provision in every season.",
   },
   ministry: {
     h: "Our Ministry",
@@ -98,6 +99,10 @@ export default function AboutPage() {
         <li>
           <strong>{tt("about.how.3").split(":")[0]}:</strong>
           <span> {tt("about.how.3").split(":").slice(1).join(":").trim()}</span>
+        </li>
+        <li>
+          <strong>{tt("about.how.4").split(":")[0]}:</strong>
+          <span> {tt("about.how.4").split(":").slice(1).join(":").trim()}</span>
         </li>
       </ol>
 
